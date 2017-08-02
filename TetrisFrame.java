@@ -21,9 +21,9 @@ public class TetrisFrame extends JFrame implements KeyListener {
     public int down = 0;
     public int xCounter = 0;
     public int zCounter = 0;
-    private sending R2;
-    private boolean received = true;
-    public boolean receivingAndSending = false;//true;
+    private socketThread t1;
+    private boolean isGameOver = false;
+    public boolean receivingAndSending = true;
     private TetrisBuilder panel;
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -41,65 +41,14 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
     }
 
-    class sending implements Runnable {
+
+
+    class socketThread implements Runnable {
         private Thread t;
-        private ServerSocket server;
         private PrintWriter outs;
         private BufferedReader inFromClient;
 
-        sending(ServerSocket thisServer, PrintWriter thisWriter, BufferedReader thisReader) {
-
-            server = thisServer;
-            outs = thisWriter;
-            inFromClient = thisReader;
-        }
-
-        public void run() {
-
-            try {
-
-                while (true) {
-                    Thread.sleep(50);
-                    System.out.println(received);
-                    if(received) {
-                        received=false;
-                        //System.out.println("sending feature array");
-                        String outputLine = generateFeatureArray();
-                        outs.println(outputLine);
-                    }
-                }
-            } catch (Exception e) {
-
-            }
-        }
-
-        public void pause(int mili) {
-            try {
-                Thread.sleep(mili);
-            } catch (Exception e) {
-
-            }
-        }
-
-        public void start() {
-
-            System.out.println("Starting sending");
-            if (t == null) {
-                t = new Thread(this, "");
-                t.start();
-            }
-        }
-    }
-
-    class listening implements Runnable {
-        private Thread t;
-        private ServerSocket server;
-        private PrintWriter outs;
-        private BufferedReader inFromClient;
-
-        listening(ServerSocket thisServer, PrintWriter thisWriter, BufferedReader thisReader) {
-
-            server = thisServer;
+        socketThread( PrintWriter thisWriter, BufferedReader thisReader) {
             outs = thisWriter;
             inFromClient = thisReader;
         }
@@ -108,17 +57,17 @@ public class TetrisFrame extends JFrame implements KeyListener {
             try {
                 while (true) {
 
-                    //String outputLine = "Hello socket, this is count: " + counter+"\n";
                     String fromclient = "";
-                    Thread.sleep(50);
-                    //outs.println(outputLine);
+                    Thread.sleep(150);
+                    System.out.println("sending feature array");
+                    String outputLine = generateFeatureArray();
+                    outs.println(outputLine);
                     fromclient = inFromClient.readLine();
-                    System.out.println("RECEIVED:" + fromclient);
-                    if (!fromclient.equals(null)) {
-                        received=true;
+
+                    if (true || !fromclient.equals(null)) {
+                        System.out.println("RECEIVED:" + fromclient);
+
                         switch (fromclient) {
-                            case "received":
-                                break;
                             case "left":
                                 panel.leftArrow();
                                 break;
@@ -141,6 +90,11 @@ public class TetrisFrame extends JFrame implements KeyListener {
                             case "z":
                                 panel.zButton();
                                 break;
+                            case "reset":
+                                Thread.sleep(50);
+                                break;
+                            case "end":
+                                System.exit(0);
                         }
 
                     }
@@ -150,7 +104,13 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
             }
         }
+        public void pause(int mili) {
+            try {
+                Thread.sleep(mili);
+            } catch (Exception e) {
 
+            }
+        }
 
         public void start() {
             System.out.println("Starting listening");
@@ -226,22 +186,25 @@ public class TetrisFrame extends JFrame implements KeyListener {
     }
 
     public void resetGame() {
-        //R2.pause(100);
-        System.out.println("paused");
-        panel.setVisible(false);
-        panel.removeAll();
-//add your elements
-        revalidate();
-        repaint();
-        left = 0;
-        right = 0;
-        down = 0;
-        xCounter = 0;
-        zCounter = 0;
-        TetrisBuilder newPanel = new TetrisBuilder(this);
-        newPanel.setVisible(true);
-        add(newPanel, BorderLayout.CENTER);
-        panel=newPanel;
+        if(receivingAndSending) {
+            isGameOver = true;
+
+            t1.pause(200);
+            panel.setVisible(false);
+            panel.removeAll();
+            revalidate();
+            repaint();
+            left = 0;
+            right = 0;
+            down = 0;
+            xCounter = 0;
+            zCounter = 0;
+            TetrisBuilder newPanel = new TetrisBuilder(this);
+            newPanel.setVisible(true);
+            add(newPanel, BorderLayout.CENTER);
+            panel = newPanel;
+            isGameOver = false;
+        }
     }
 
     public TetrisFrame() {
@@ -274,10 +237,8 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
                 inFromClient = new BufferedReader(new InputStreamReader(connected.getInputStream()));
 
-                listening R1 = new listening(server, outs, inFromClient);
-                R1.start();
-                R2 = new sending(server, outs, inFromClient);
-                R2.start();
+                t1= new socketThread(outs,inFromClient);
+                t1.start();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -296,14 +257,14 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
     public String generateFeatureArray() {
         String totalString = "";
-        int gameOver = 0;
+        int gameOver;
         int[][] boardVals = getBoardMatrix();
         BoardCoord[] pieceCoords = panel.getCurrPiece().getCoords();
 
-        if (!panel.isGameOver()) {
-            gameOver = 0;
-        } else {
+        if (isGameOver) {
             gameOver = 1;
+        } else {
+            gameOver = 0;
         }
         totalString += gameOver + ",";
 
@@ -327,8 +288,8 @@ public class TetrisFrame extends JFrame implements KeyListener {
             totalString += pieceCoords[i].row + ",";
             totalString += pieceCoords[i].col + ",";
         }
-        String mod = panel.getModulo() + "";
-        totalString += mod;
+        //String mod = panel.getModulo() + "";
+        //totalString += mod;
         return totalString;
 
     }

@@ -212,12 +212,14 @@ public class TetrisBuilder extends JPanel {
 
         //Game Over Condition
         if (gameOver) {
+
             g2.setColor(Color.RED);
             g2.drawString("Game Over", 300, 730);
             g2.drawString("Final Score: " + score, 300, 760);
             for (int i = 0; i < numPieces; i++) {
                 System.out.print(pieceCounter[i] + " ");
             }
+            tf.resetGame();
         }
 
     }
@@ -311,9 +313,7 @@ public class TetrisBuilder extends JPanel {
                     justDropped = false;
                     currPiece.setDropLoc(board.determineDropLoc(currPiece));
                 }
-                //System.out.println("dc: " + droppedCounter);
-                //System.out.println("justDropped: " + justDropped);
-                //currPiece.checkPieceAtDropLoc() &&
+
                 if ( droppedCounter > 0 && droppedCounter < droppedDelay) {
                     droppedCounter++;
 
@@ -321,12 +321,11 @@ public class TetrisBuilder extends JPanel {
                     droppedCounter=0;
                     Piece dropped = board.lowerPiece(piece);
 
-                    //System.out.println("dropped type: "+ dropped.getType());
                     if (dropped.getType() == -999) {
                         System.out.println("modulo: " + modulo);
-                        //if(tf.receivingAndSending)
-                        //endTimer();
-                        tf.resetGame();
+                        endTimer();
+
+
                         return;
 
 
@@ -357,21 +356,16 @@ public class TetrisBuilder extends JPanel {
             return modulo;
         }
     }
-    git init
-    git add README.md
-    git commit -m "first commit"
-    git remote add origin https://github.com/patrickrchao/Tetris.git
-    git push -u origin master
     public void spaceButton() {
 
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         BoardCoord[] currPieceCoords = currPiece.getCoords();
-        int scoreCounter=currPieceCoords[0].row- dropLoc[0].row;
+        int scoreCounter=2*(currPieceCoords[0].row- dropLoc[0].row);
         currPiece.setDropLoc(dropLoc);
         int lineDiff = board.dropPiece(currPiece);
         if (lineDiff == -999) {
-            tf.resetGame();
-            //endTimer();
+            //tf.resetGame();
+            endTimer();
         } else {
 
             if(comboCounter>0) {
@@ -394,7 +388,6 @@ public class TetrisBuilder extends JPanel {
             }
             currPiece = nextPieceToPlace;
         }
-        System.out.println(comboCounter);
 
 
     }
@@ -402,7 +395,6 @@ public class TetrisBuilder extends JPanel {
     public int lineClearCalc(int linesCleared){
 
                 int score = (int) (Math.pow(linesCleared,3)/6.0-Math.pow(linesCleared,2)+23*linesCleared/6.0-2);
-                System.out.println(score);
                 return score*pointsPerLine;
     }
 
@@ -431,7 +423,6 @@ public class TetrisBuilder extends JPanel {
         if (currPiece.checkPieceAtDropLoc() && droppedCounter == 0) {
             droppedCounter = 1;
         }
-        System.out.println("up");
         currPiece.turnClockwise(boardVals, 0);
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         currPiece.setDropLoc(dropLoc);

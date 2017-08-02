@@ -162,7 +162,7 @@ public class Board {
         int type = piece.getType();
         for (int i = 0; i < piece.length(); i++) {
             //if coords are out of bounds, you lose
-            if(coords[i].row>board.length-1||board[coords[i].row][coords[i].col]!=0){
+            if(coords[i].row>=board.length-1||board[coords[i].row][coords[i].col]!=0){
                 return false;
             }
 
