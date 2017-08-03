@@ -19,10 +19,10 @@ public class TetrisFrame extends JFrame implements KeyListener {
     public int left = 0;
     public int right = 0;
     public int down = 0;
-
     public int xCounter = 0;
     public int zCounter = 0;
     private socketThread t1;
+    private int episodeCounter = 0;
     private boolean isGameOver = false;
     public boolean receivingAndSending = true;
     private TetrisBuilder panel;
@@ -61,46 +61,41 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
                     String fromclient = "";
                     Thread.sleep(speed * 2);
-                    //System.out.println("sending feature array");
                     String outputLine = generateFeatureArray();
                     outs.println(outputLine);
                     fromclient = inFromClient.readLine();
 
-                    if (isGameOver) {
-                        while (!fromclient.equals("reset")) {
-                            fromclient = inFromClient.readLine();
-                        }
-                    } else {
-                        System.out.println("RECEIVED:" + fromclient);
+                    System.out.println("RECEIVED:" + fromclient);
 
-                        switch (fromclient) {
-                            case "left":
-                                panel.leftArrow();
-                                break;
-                            case "right":
-                                panel.rightArrow();
-                                break;
-                            case "x":
-                            case "up":
-                                panel.upArrowAndXButton();
-                                break;
-                            case "down":
-                                panel.downArrow();
-                                break;
-                            case "shift":
-                                panel.shiftButton();
-                                break;
-                            case "space":
-                                panel.spaceButton();
-                                break;
-                            case "z":
-                                panel.zButton();
-                                break;
-                            case "reset":
-                                break;
-                            case "end":
-                                System.exit(0);
-                        }
+                    switch (fromclient) {
+                        case "left":
+                            panel.leftArrow();
+                            break;
+                        case "right":
+                            panel.rightArrow();
+                            break;
+                        case "x":
+                        case "up":
+                            panel.upArrowAndXButton();
+                            break;
+                        case "down":
+                            panel.downArrow();
+                            break;
+                        case "shift":
+                            panel.shiftButton();
+                            break;
+                        case "space":
+                            panel.spaceButton();
+                            break;
+                        case "z":
+                            panel.zButton();
+                            break;
+                        case "reset":
+                            isGameOver = false;
+                            break;
+                        case "end":
+                            System.exit(0);
+
 
                     }
 
@@ -191,6 +186,8 @@ public class TetrisFrame extends JFrame implements KeyListener {
     }
 
     public void resetGame() {
+        episodeCounter++;
+        System.out.println("Episode Counter: "+ episodeCounter);
         if (receivingAndSending) {
             isGameOver = true;
 
@@ -208,7 +205,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
             newPanel.setVisible(true);
             add(newPanel, BorderLayout.CENTER);
             panel = newPanel;
-            isGameOver = false;
+
         }
     }
 
@@ -226,7 +223,6 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
 
         System.out.println("Creating ");
-        String fromclient = "";
         ServerSocket server;
         PrintWriter outs;
 
@@ -293,8 +289,6 @@ public class TetrisFrame extends JFrame implements KeyListener {
             totalString += pieceCoords[i].row + ",";
             totalString += pieceCoords[i].col + ",";
         }
-        //String mod = panel.getModulo() + "";
-        //totalString += mod;
         return totalString;
 
     }

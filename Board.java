@@ -143,7 +143,11 @@ public class Board {
             int diff = dropPiece(piece);
             //If cleared rows, then it is the negative of the number of cleared rows
             //If game over, -999
-            return new Piece(null, diff);
+            BoardCoord[] coordinates = new BoardCoord[piece.getCoords().length];
+            for(int i=0;i<coordinates.length;i++){
+                coordinates[i]=new BoardCoord(0,0);
+            }
+            return new Piece(coordinates, diff);
         } else {
 
             piece.moveDown(board);

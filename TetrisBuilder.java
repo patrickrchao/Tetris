@@ -63,6 +63,13 @@ public class TetrisBuilder extends JPanel {
 
     private int comboCounter =-1;//thank you nintendo !
     public void drawGrid(Graphics2D g2) {
+        if (gameOver) {
+
+            g2.setColor(Color.RED);
+            g2.drawString("Game Over", 300, 730);
+            g2.drawString("Final Score: " + score, 300, 760);
+            tf.resetGame();
+        }
         Color gray = new Color(200, 200, 200);
         g2.setColor(gray);
         int topLeftX = 250;
@@ -211,16 +218,7 @@ public class TetrisBuilder extends JPanel {
         }
 
         //Game Over Condition
-        if (gameOver) {
 
-            g2.setColor(Color.RED);
-            g2.drawString("Game Over", 300, 730);
-            g2.drawString("Final Score: " + score, 300, 760);
-            for (int i = 0; i < numPieces; i++) {
-                System.out.print(pieceCounter[i] + " ");
-            }
-            tf.resetGame();
-        }
 
     }
 
@@ -333,6 +331,7 @@ public class TetrisBuilder extends JPanel {
 
                         int lineDiff = board.dropPiece(currPiece);
                         if(lineDiff!=-1) {
+                            System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
                             scoreCounter+=lineClearCalc(lineDiff + 1);
                         }
                         piece = nextPiece(true);
@@ -374,9 +373,11 @@ public class TetrisBuilder extends JPanel {
 
             Piece nextPieceToPlace;
             if (lineDiff == -1) {
+
                 nextPieceToPlace = nextPiece(false);
                 currPiece.setDropLoc(board.determineDropLoc(currPiece));
             }else{
+                System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
                 scoreCounter+=lineClearCalc(lineDiff + 1);
                 nextPieceToPlace = nextPiece(true);
                 justDropped = true;
