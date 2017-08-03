@@ -26,7 +26,7 @@ public class TetrisBuilder extends JPanel {
     java.util.Timer timer;
     public int windowWidth = 800;
     public int windowHeight = 800;
-    private int speed = 50;
+    private int speed;
     public static int numRows = 20;
     public static int numCols = 10;
     public int numPieces = 7;
@@ -469,7 +469,7 @@ public class TetrisBuilder extends JPanel {
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
         tf = theTF;
-
+        speed = theTF.speed;
         pieceCoords = new BoardCoord[numPieces][pieceSize];
         pieceOrigin = new BoardCoordDouble[numPieces];
         //Orange L

@@ -19,12 +19,15 @@ public class TetrisFrame extends JFrame implements KeyListener {
     public int left = 0;
     public int right = 0;
     public int down = 0;
+
     public int xCounter = 0;
     public int zCounter = 0;
     private socketThread t1;
     private boolean isGameOver = false;
     public boolean receivingAndSending = true;
     private TetrisBuilder panel;
+    public int speed = 75;
+
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
             @Override
@@ -42,13 +45,12 @@ public class TetrisFrame extends JFrame implements KeyListener {
     }
 
 
-
     class socketThread implements Runnable {
         private Thread t;
         private PrintWriter outs;
         private BufferedReader inFromClient;
 
-        socketThread( PrintWriter thisWriter, BufferedReader thisReader) {
+        socketThread(PrintWriter thisWriter, BufferedReader thisReader) {
             outs = thisWriter;
             inFromClient = thisReader;
         }
@@ -58,13 +60,17 @@ public class TetrisFrame extends JFrame implements KeyListener {
                 while (true) {
 
                     String fromclient = "";
-                    Thread.sleep(150);
-                    System.out.println("sending feature array");
+                    Thread.sleep(speed * 2);
+                    //System.out.println("sending feature array");
                     String outputLine = generateFeatureArray();
                     outs.println(outputLine);
                     fromclient = inFromClient.readLine();
 
-                    if (true || !fromclient.equals(null)) {
+                    if (isGameOver) {
+                        while (!fromclient.equals("reset")) {
+                            fromclient = inFromClient.readLine();
+                        }
+                    } else {
                         System.out.println("RECEIVED:" + fromclient);
 
                         switch (fromclient) {
@@ -91,7 +97,6 @@ public class TetrisFrame extends JFrame implements KeyListener {
                                 panel.zButton();
                                 break;
                             case "reset":
-                                Thread.sleep(50);
                                 break;
                             case "end":
                                 System.exit(0);
@@ -99,11 +104,13 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
                     }
 
+
                 }
             } catch (Exception e) {
 
             }
         }
+
         public void pause(int mili) {
             try {
                 Thread.sleep(mili);
@@ -120,8 +127,6 @@ public class TetrisFrame extends JFrame implements KeyListener {
             }
         }
     }
-
-
 
 
     public void keyPressed(KeyEvent e) {
@@ -186,10 +191,10 @@ public class TetrisFrame extends JFrame implements KeyListener {
     }
 
     public void resetGame() {
-        if(receivingAndSending) {
+        if (receivingAndSending) {
             isGameOver = true;
 
-            t1.pause(200);
+            t1.pause(2 * speed);
             panel.setVisible(false);
             panel.removeAll();
             revalidate();
@@ -237,7 +242,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
                 inFromClient = new BufferedReader(new InputStreamReader(connected.getInputStream()));
 
-                t1= new socketThread(outs,inFromClient);
+                t1 = new socketThread(outs, inFromClient);
                 t1.start();
 
             } catch (Exception e) {
