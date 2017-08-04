@@ -15,6 +15,7 @@ import java.util.Queue;
 import java.util.ArrayList;
 import java.util.TimerTask;
 import java.util.LinkedList;
+
 /**
  * Created by Patrick on 7/5/17.
  */
@@ -56,12 +57,13 @@ public class TetrisBuilder extends JPanel {
     private long startTime;
     private int droppedCounter = 0;
     private int droppedDelay = 2;
-    private int pointsPerLine=100;
+    private int pointsPerLine = 100;
     private boolean justDropped = false;
     private int minSpeed = 20;
-    private int pointsToReachMidpoint=10000;
+    private int pointsToReachMidpoint = 10000;
 
-    private int comboCounter =-1;//thank you nintendo !
+    private int comboCounter = -1;//thank you nintendo !
+
     public void drawGrid(Graphics2D g2) {
         if (gameOver) {
 
@@ -224,10 +226,10 @@ public class TetrisBuilder extends JPanel {
 
     public Piece nextPiece(boolean valid) {
 
-        if(valid){
+        if (valid) {
             comboCounter++;
-        }else{
-            comboCounter=-1;
+        } else {
+            comboCounter = -1;
         }
         droppedCounter = 0;
         int type = pieceQueue.remove();
@@ -302,21 +304,21 @@ public class TetrisBuilder extends JPanel {
             }
 
             piece = currPiece;
-            int scoreCounter=0;
-            int speed=speedCalculation();
+            int scoreCounter = 0;
+            int speed = speedCalculation();
 
-            if (speed==0 || modulo % speedCalculation() == 0) {
+            if (speed == 0 || modulo % speedCalculation() == 0) {
 
-                if (justDropped&&droppedCounter==0) {
+                if (justDropped && droppedCounter == 0) {
                     justDropped = false;
                     currPiece.setDropLoc(board.determineDropLoc(currPiece));
                 }
 
-                if ( droppedCounter > 0 && droppedCounter < droppedDelay) {
+                if (droppedCounter > 0 && droppedCounter < droppedDelay) {
                     droppedCounter++;
 
                 } else {
-                    droppedCounter=0;
+                    droppedCounter = 0;
                     Piece dropped = board.lowerPiece(piece);
 
                     if (dropped.getType() == -999) {
@@ -330,13 +332,13 @@ public class TetrisBuilder extends JPanel {
                     } else if (dropped.getType() < 0) {
 
                         int lineDiff = board.dropPiece(currPiece);
-                        if(lineDiff!=-1) {
+                        if (lineDiff != -1) {
                             System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
-                            scoreCounter+=lineClearCalc(lineDiff + 1);
+                            scoreCounter += lineClearCalc(lineDiff + 1);
                         }
                         piece = nextPiece(true);
 
-                        if(comboCounter>0) {
+                        if (comboCounter > 0) {
                             scoreCounter += comboCounter * 0.5 * pointsPerLine;
                         }
                         incrementScore(scoreCounter);
@@ -351,15 +353,17 @@ public class TetrisBuilder extends JPanel {
             }
             repaint();
         }
-        public int getModulo(){
+
+        public int getModulo() {
             return modulo;
         }
     }
+
     public void spaceButton() {
 
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         BoardCoord[] currPieceCoords = currPiece.getCoords();
-        int scoreCounter=2*(currPieceCoords[0].row- dropLoc[0].row);
+        int scoreCounter = 2 * (currPieceCoords[0].row - dropLoc[0].row);
         currPiece.setDropLoc(dropLoc);
         int lineDiff = board.dropPiece(currPiece);
         if (lineDiff == -999) {
@@ -367,7 +371,7 @@ public class TetrisBuilder extends JPanel {
             endTimer();
         } else {
 
-            if(comboCounter>0) {
+            if (comboCounter > 0) {
                 scoreCounter += comboCounter * 0.5 * pointsPerLine;
             }
 
@@ -376,12 +380,12 @@ public class TetrisBuilder extends JPanel {
 
                 nextPieceToPlace = nextPiece(false);
                 currPiece.setDropLoc(board.determineDropLoc(currPiece));
-            }else{
+            } else {
                 System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
-                scoreCounter+=lineClearCalc(lineDiff + 1);
+                scoreCounter += lineClearCalc(lineDiff + 1);
                 nextPieceToPlace = nextPiece(true);
                 justDropped = true;
-                droppedCounter=droppedDelay;
+                droppedCounter = droppedDelay;
             }
             incrementScore(scoreCounter);
             if (heldPiece >= 100) {
@@ -393,10 +397,10 @@ public class TetrisBuilder extends JPanel {
 
     }
 
-    public int lineClearCalc(int linesCleared){
+    public int lineClearCalc(int linesCleared) {
 
-                int score = (int) (Math.pow(linesCleared,3)/6.0-Math.pow(linesCleared,2)+23*linesCleared/6.0-2);
-                return score*pointsPerLine;
+        int score = (int) (Math.pow(linesCleared, 3) / 6.0 - Math.pow(linesCleared, 2) + 23 * linesCleared / 6.0 - 2);
+        return score * pointsPerLine;
     }
 
     public void leftArrow() {
@@ -432,9 +436,8 @@ public class TetrisBuilder extends JPanel {
     public void downArrow() {
 
 
-
         Piece dropped = board.lowerPiece(currPiece);
-        if(dropped.getType()>0) {
+        if (dropped.getType() > 0) {
             incrementScore(1);
         }
 
@@ -446,7 +449,7 @@ public class TetrisBuilder extends JPanel {
         if (currPiece.checkPieceAtDropLoc() && droppedCounter == 0) {
             droppedCounter = 1;
         }
-        currPiece.turnCounterClockwise(boardVals,0);
+        currPiece.turnCounterClockwise(boardVals, 0);
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         currPiece.setDropLoc(dropLoc);
     }
@@ -517,49 +520,49 @@ public class TetrisBuilder extends JPanel {
         pieceOrigin[5] = new BoardCoordDouble(20.0, 4.0);
         pieceOrigin[6] = new BoardCoordDouble(19.5, 4.5);
         /**
-        pieceCoords[0][0] = new BoardCoord(19, 3);
-        pieceCoords[0][1] = new BoardCoord(19, 4);
-        pieceCoords[0][2] = new BoardCoord(19, 5);
-        pieceCoords[0][3] = new BoardCoord(20, 5);
-        //Blue J
-        pieceCoords[1][0] = new BoardCoord(19, 3);
-        pieceCoords[1][1] = new BoardCoord(19, 4);
-        pieceCoords[1][2] = new BoardCoord(19, 5);
-        pieceCoords[1][3] = new BoardCoord(20, 3);
-        //o Yellow
-        pieceCoords[2][0] = new BoardCoord(19, 4);
-        pieceCoords[2][1] = new BoardCoord(19, 5);
-        pieceCoords[2][2] = new BoardCoord(20, 4);
-        pieceCoords[2][3] = new BoardCoord(20, 5);
-        //T Purple
-        pieceCoords[3][0] = new BoardCoord(19, 3);
-        pieceCoords[3][1] = new BoardCoord(19, 4);
-        pieceCoords[3][2] = new BoardCoord(19, 5);
-        pieceCoords[3][3] = new BoardCoord(20, 4);
-        //S Green
-        pieceCoords[4][0] = new BoardCoord(19, 3);
-        pieceCoords[4][1] = new BoardCoord(19, 4);
-        pieceCoords[4][2] = new BoardCoord(20, 4);
-        pieceCoords[4][3] = new BoardCoord(20, 5);
-        //Z Red
-        pieceCoords[5][0] = new BoardCoord(19, 5);
-        pieceCoords[5][1] = new BoardCoord(19, 4);
-        pieceCoords[5][2] = new BoardCoord(20, 4);
-        pieceCoords[5][3] = new BoardCoord(20, 3);
-        //I Light Blue
-        pieceCoords[6][0] = new BoardCoord(19, 6);
-        pieceCoords[6][1] = new BoardCoord(19, 5);
-        pieceCoords[6][2] = new BoardCoord(19, 4);
-        pieceCoords[6][3] = new BoardCoord(19, 3);
+         pieceCoords[0][0] = new BoardCoord(19, 3);
+         pieceCoords[0][1] = new BoardCoord(19, 4);
+         pieceCoords[0][2] = new BoardCoord(19, 5);
+         pieceCoords[0][3] = new BoardCoord(20, 5);
+         //Blue J
+         pieceCoords[1][0] = new BoardCoord(19, 3);
+         pieceCoords[1][1] = new BoardCoord(19, 4);
+         pieceCoords[1][2] = new BoardCoord(19, 5);
+         pieceCoords[1][3] = new BoardCoord(20, 3);
+         //o Yellow
+         pieceCoords[2][0] = new BoardCoord(19, 4);
+         pieceCoords[2][1] = new BoardCoord(19, 5);
+         pieceCoords[2][2] = new BoardCoord(20, 4);
+         pieceCoords[2][3] = new BoardCoord(20, 5);
+         //T Purple
+         pieceCoords[3][0] = new BoardCoord(19, 3);
+         pieceCoords[3][1] = new BoardCoord(19, 4);
+         pieceCoords[3][2] = new BoardCoord(19, 5);
+         pieceCoords[3][3] = new BoardCoord(20, 4);
+         //S Green
+         pieceCoords[4][0] = new BoardCoord(19, 3);
+         pieceCoords[4][1] = new BoardCoord(19, 4);
+         pieceCoords[4][2] = new BoardCoord(20, 4);
+         pieceCoords[4][3] = new BoardCoord(20, 5);
+         //Z Red
+         pieceCoords[5][0] = new BoardCoord(19, 5);
+         pieceCoords[5][1] = new BoardCoord(19, 4);
+         pieceCoords[5][2] = new BoardCoord(20, 4);
+         pieceCoords[5][3] = new BoardCoord(20, 3);
+         //I Light Blue
+         pieceCoords[6][0] = new BoardCoord(19, 6);
+         pieceCoords[6][1] = new BoardCoord(19, 5);
+         pieceCoords[6][2] = new BoardCoord(19, 4);
+         pieceCoords[6][3] = new BoardCoord(19, 3);
 
-        pieceOrigin[0] = new BoardCoordDouble(19.0, 4.0);
-        pieceOrigin[1] = new BoardCoordDouble(19.0, 4.0);
-        pieceOrigin[2] = new BoardCoordDouble(19.5, 4.5);
-        pieceOrigin[3] = new BoardCoordDouble(19.0, 4.0);
-        pieceOrigin[4] = new BoardCoordDouble(19.0, 4.0);
-        pieceOrigin[5] = new BoardCoordDouble(19.0, 4.0);
-        pieceOrigin[6] = new BoardCoordDouble(18.5, 4.5);
-*/
+         pieceOrigin[0] = new BoardCoordDouble(19.0, 4.0);
+         pieceOrigin[1] = new BoardCoordDouble(19.0, 4.0);
+         pieceOrigin[2] = new BoardCoordDouble(19.5, 4.5);
+         pieceOrigin[3] = new BoardCoordDouble(19.0, 4.0);
+         pieceOrigin[4] = new BoardCoordDouble(19.0, 4.0);
+         pieceOrigin[5] = new BoardCoordDouble(19.0, 4.0);
+         pieceOrigin[6] = new BoardCoordDouble(18.5, 4.5);
+         */
         pieceColors = new Color[numPieces];
         pieceColors[0] = new Color(234, 143, 10);
         pieceColors[1] = new Color(0, 0, 236);
@@ -590,11 +593,6 @@ public class TetrisBuilder extends JPanel {
     }
 
 
-
-
-
-
-
     private void endTimer() {
         timer.cancel();
         timer.purge();
@@ -604,12 +602,14 @@ public class TetrisBuilder extends JPanel {
         long duration = (endTime - startTime);
         System.out.println("total time: " + duration);
     }
+
     private BufferedImage createBackground() {
         BufferedImage bg = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = bg.createGraphics();
         g2.dispose();
         return bg;
     }
+
     public void drawBlock(Graphics2D g2, int upperX, int upperY, int sidelength, Color color) {
         Color temp = color;
         double lightnessTint = 1.0 * 3 / 4;
@@ -661,10 +661,12 @@ public class TetrisBuilder extends JPanel {
         g2.fillPolygon(lowerTrap);
 
     }
+
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(windowWidth, windowHeight);
     }
+
     private int speedCalculation() {
         //modulo is 0
         //min speed is 15
@@ -677,15 +679,17 @@ public class TetrisBuilder extends JPanel {
 
         double speed = -(4 * Math.pow(10, -8) * Math.pow(progress, 3)) + 9 * Math.pow(10, -5) * Math.pow(progress, 2) - 0.0708 * progress + 20;
         //System.out.println(numberOfSec+ " "+progress+" "+speed);
-        double sigmoidVal = minSpeed / (1 + Math.exp( (score-pointsToReachMidpoint)/10000.0 ));
+        double sigmoidVal = minSpeed / (1 + Math.exp((score - pointsToReachMidpoint) / 10000.0));
         // = -4E-08x3 + 9E-05x2 - 0.0708x + 20
 
         return (int) (sigmoidVal);//(int) (Math.round(speed));
         //return (int) (Math.round(sigmoidVal));
     }
+
     private void incrementScore(int additionalScore) {
         score += additionalScore;
     }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -696,12 +700,14 @@ public class TetrisBuilder extends JPanel {
         drawGrid(g2);
 
     }
+
     public void callTimer() {
         toolkit = Toolkit.getDefaultToolkit();
         timer = new java.util.Timer();
         reminder = new RemindTask(currPiece);
         timer.schedule(reminder, 0, speed);
     }
+
     public ArrayList<Integer> refillBag() {
         bagOfPieces.clear();
         for (int i = 0; i < numPieces; i++) {
@@ -731,25 +737,29 @@ public class TetrisBuilder extends JPanel {
 
     //Read in keyboard input
     //Graphical representation
-    public Board getBoard(){
+    public Board getBoard() {
         return board;
     }
-    public boolean isGameOver(){
+
+    public boolean isGameOver() {
         return gameOver;
     }
-    public Piece getCurrPiece(){
+
+    public Piece getCurrPiece() {
         return currPiece;
     }
 
-    public ArrayList getPieceQueue(){
+    public ArrayList getPieceQueue() {
 
         ArrayList<Integer> l = new ArrayList(pieceQueue);
         return l;
     }
-    public int getScore(){
+
+    public int getScore() {
         return score;
     }
-    public int getModulo(){
+
+    public int getModulo() {
         return reminder.getModulo();
     }
 }
