@@ -324,11 +324,7 @@ public class TetrisBuilder extends JPanel {
                     if (dropped.getType() == -999) {
                         System.out.println("modulo: " + modulo);
                         endTimer();
-
-
                         return;
-
-
                     } else if (dropped.getType() < 0) {
 
                         int lineDiff = board.dropPiece(currPiece);
@@ -345,6 +341,7 @@ public class TetrisBuilder extends JPanel {
                         if (heldPiece >= 100) {
                             heldPiece -= 100;
                         }
+
                     }
                     boardVals = board.getBoard();
                     currPiece = piece;
@@ -352,10 +349,6 @@ public class TetrisBuilder extends JPanel {
 
             }
             repaint();
-        }
-
-        public int getModulo() {
-            return modulo;
         }
     }
 
@@ -488,6 +481,7 @@ public class TetrisBuilder extends JPanel {
         pieceCoords[1][3] = new BoardCoord(21, 3);
         //o Yellow
         pieceCoords[2][0] = new BoardCoord(20, 4);
+
         pieceCoords[2][1] = new BoardCoord(20, 5);
         pieceCoords[2][2] = new BoardCoord(21, 4);
         pieceCoords[2][3] = new BoardCoord(21, 5);
@@ -502,15 +496,16 @@ public class TetrisBuilder extends JPanel {
         pieceCoords[4][2] = new BoardCoord(21, 4);
         pieceCoords[4][3] = new BoardCoord(21, 5);
         //Z Red
-        pieceCoords[5][0] = new BoardCoord(20, 5);
-        pieceCoords[5][1] = new BoardCoord(20, 4);
-        pieceCoords[5][2] = new BoardCoord(21, 4);
-        pieceCoords[5][3] = new BoardCoord(21, 3);
+        pieceCoords[5][0] = new BoardCoord(20, 4);
+        pieceCoords[5][1] = new BoardCoord(20, 5);
+        pieceCoords[5][2] = new BoardCoord(21, 3);
+        pieceCoords[5][3] = new BoardCoord(21, 4);
         //I Light Blue
-        pieceCoords[6][0] = new BoardCoord(20, 6);
-        pieceCoords[6][1] = new BoardCoord(20, 5);
-        pieceCoords[6][2] = new BoardCoord(20, 4);
-        pieceCoords[6][3] = new BoardCoord(20, 3);
+        pieceCoords[6][0] = new BoardCoord(20, 3);
+        pieceCoords[6][1] = new BoardCoord(20, 4);
+        pieceCoords[6][2] = new BoardCoord(20, 5);
+        pieceCoords[6][3] = new BoardCoord(20, 6);
+
 
         pieceOrigin[0] = new BoardCoordDouble(20.0, 4.0);
         pieceOrigin[1] = new BoardCoordDouble(20.0, 4.0);
@@ -577,11 +572,12 @@ public class TetrisBuilder extends JPanel {
         bagOfPieces = new ArrayList<Integer>();
         refillBag();
 
-        //Types go from 1 to num pieces (usually 7)
+        //Types go from 1 to num pieces (usually 7)®
         //Lets say you picked 3 last time
         //1 2 3 4 5 6
         //1 2 4 5 6 7
         pieceQueue = new LinkedList<>();
+        //ieceQueue.add(5);
         for (int i = 0; i < queueSize; i++) {
             int top = bagOfPieces.remove(0);
             pieceQueue.add(top);
@@ -676,13 +672,11 @@ public class TetrisBuilder extends JPanel {
         long duration = (endTime - startTime);
         double numberOfSec = ((double) duration) / 1000.0;
         double progress = numberOfSec + 5 * score;
-
-        double speed = -(4 * Math.pow(10, -8) * Math.pow(progress, 3)) + 9 * Math.pow(10, -5) * Math.pow(progress, 2) - 0.0708 * progress + 20;
         //System.out.println(numberOfSec+ " "+progress+" "+speed);
         double sigmoidVal = minSpeed / (1 + Math.exp((score - pointsToReachMidpoint) / 10000.0));
         // = -4E-08x3 + 9E-05x2 - 0.0708x + 20
 
-        return (int) (sigmoidVal);//(int) (Math.round(speed));
+        return (int) minSpeed;//(sigmoidVal);//(int) (Math.round(speed));
         //return (int) (Math.round(sigmoidVal));
     }
 
@@ -741,9 +735,7 @@ public class TetrisBuilder extends JPanel {
         return board;
     }
 
-    public boolean isGameOver() {
-        return gameOver;
-    }
+
 
     public Piece getCurrPiece() {
         return currPiece;
@@ -759,7 +751,5 @@ public class TetrisBuilder extends JPanel {
         return score;
     }
 
-    public int getModulo() {
-        return reminder.getModulo();
-    }
+
 }

@@ -26,7 +26,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
     private boolean isGameOver = false;
     public boolean receivingAndSending = true;
     private TetrisBuilder panel;
-    public int speed = 75;
+    public int speed = 100;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -190,8 +190,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
         System.out.println("Episode Counter: "+ episodeCounter);
         if (receivingAndSending) {
             isGameOver = true;
-
-            t1.pause(2 * speed);
+            t1.pause(4 * speed);
             panel.setVisible(false);
             panel.removeAll();
             revalidate();
@@ -289,6 +288,8 @@ public class TetrisFrame extends JFrame implements KeyListener {
             totalString += pieceCoords[i].row + ",";
             totalString += pieceCoords[i].col + ",";
         }
+        totalString+=panel.getCurrPiece().getOrigin().row+",";
+        totalString+=panel.getCurrPiece().getOrigin().col+",";
         return totalString;
 
     }
