@@ -84,12 +84,16 @@ public class Board {
     }
 
     public int dropPiece(Piece piece) {
-        int scoreDiff=-1;
+        int scoreDiff=0;
+        //If the piece hasnt been dropped yet
         if(piece.dropped==false) {
             piece.dropped = true;
+            //Set the piece's new location to be the drop location
             BoardCoord[] dropLoc = piece.getDropLoc();
             piece.updateCoords(dropLoc);
+            //Update the board
             boolean flag = updateBoard(piece);
+            //If not valid, end the game
             if(!flag){
                 return -999;
             }
@@ -165,7 +169,6 @@ public class Board {
     public Piece lowerPiece(Piece piece) {
         if (piece.checkPieceAtDropLoc()) {
             int diff = dropPiece(piece);
-            //If cleared rows, then it is the negative of the number of cleared rows
             //If game over, -999
             BoardCoord[] coordinates = new BoardCoord[piece.getCoords().length];
             for(int i=0;i<coordinates.length;i++){
@@ -190,7 +193,7 @@ public class Board {
         int type = piece.getType();
         for (int i = 0; i < piece.length(); i++) {
             //if coords are out of bounds, you lose
-            if(coords[i].row>=board.length-1||board[coords[i].row][coords[i].col]!=0){
+            if(coords[i].row>board.length-1||board[coords[i].row][coords[i].col]!=0){
                 return false;
             }
 

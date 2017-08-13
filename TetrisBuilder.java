@@ -46,8 +46,6 @@ public class TetrisBuilder extends JPanel {
     private BoardCoordDouble[] pieceOrigin;
     private boolean showOrigin = false;
     private int heldPiece = -1;
-    private boolean keyDown = false;
-    private int[] pieceCounter = new int[numPieces];
 
     private TetrisFrame tf;
     private int keyDelay = 1;
@@ -63,22 +61,30 @@ public class TetrisBuilder extends JPanel {
     private int pointsToReachMidpoint = 10000;
 
     private int comboCounter = -1;//thank you nintendo !
-
+    private boolean justLost=false;
+    //Draws the actual screen given a graphics 2D object
     public void drawGrid(Graphics2D g2) {
-        if (gameOver) {
-
+        //If the player loses the game, it draws the game over text
+        if (!(justLost && tf.isGameOver==false) && gameOver) {
+            //gameOver=false;
+            //Red text is more intense
             g2.setColor(Color.RED);
             g2.drawString("Game Over", 300, 730);
             g2.drawString("Final Score: " + score, 300, 760);
-            tf.resetGame();
+
         }
-        Color gray = new Color(200, 200, 200);
-        g2.setColor(gray);
+
+
+
         int topLeftX = 250;
         int topLeftY = 100;
-        int squareWidth = 30;
-
+        int squareWidth = 30; //Size of square
+        //Draw the overall Tetris board
+        Color gray = new Color(200, 200, 200);
+        g2.setColor(gray);
         g2.fillRect(topLeftX, topLeftY, squareWidth * numCols, squareWidth * numRows);
+
+        //Draw the grid lines
         g2.setColor(Color.BLACK);
         for (int i = 0; i < numCols + 1; i++) {
             g2.drawLine(i * squareWidth + topLeftX, topLeftY, i * squareWidth + topLeftX, topLeftY + numRows * squareWidth);
@@ -88,7 +94,7 @@ public class TetrisBuilder extends JPanel {
         }
 
 
-        //Draw Board
+        //Draw Board individual pieces
         for (int i = 0; i < numCols; i++) {
             for (int j = 0; j < numRows; j++) {
                 if (boardVals[j][i] != 0) {
@@ -97,6 +103,7 @@ public class TetrisBuilder extends JPanel {
             }
         }
 
+        //Draw ghost piece
         Color darkGray = new Color(100, 100, 100);
         g2.setColor(darkGray);
 
@@ -106,6 +113,7 @@ public class TetrisBuilder extends JPanel {
             int row = dropLoc[i].row;
             int col = dropLoc[i].col;
             if (row < numRows && col < numCols) {
+                //Calculate the location of the ghost piece
                 int x = col * squareWidth + topLeftX + 2;
                 int y = (19 - row) * squareWidth + topLeftY + 2;
                 //drawBlock(g2,x,y,squareWidth-2,darkGray);
@@ -147,10 +155,11 @@ public class TetrisBuilder extends JPanel {
         int topLeftQueueY = 150;
         int queueWidth = 150;
         int queueHeight = 500;
-        int queueRectangleDistanceApart = (int) queueHeight / ((queueSize + 1) * queueSize);
+        int queueRectangleDistanceApart = queueHeight / ((queueSize + 1) * queueSize);
         int queueRectangleHeight = queueRectangleDistanceApart * queueSize;
         //origin is at topLeftQueueX+queueWidth/2
 
+        //Draw pieces in the queue
         BoardCoord[] queueCoord;
         for (int i = 0; i < queueSize; i++) {
             int queueType = pieceQueue.remove();
@@ -171,7 +180,6 @@ public class TetrisBuilder extends JPanel {
                     drawBlock(g2, pieceX, pieceY, squareWidth, pieceColors[queueType]);
                 }
 
-
             } else {
                 g2.setColor(gray);
                 g2.fillRect(topLeftQueueX, topLeftQueueY + i * queueRectangleHeight + (i) * queueRectangleDistanceApart, queueWidth, queueRectangleHeight);
@@ -185,11 +193,11 @@ public class TetrisBuilder extends JPanel {
                     }
                     drawBlock(g2, pieceX, pieceY, squareWidth, pieceColors[queueType]);
                 }
-
             }
         }
 
 
+        //Draw Score
         g2.setColor(Color.BLACK);
         g2.setFont(new Font("ComicSans", Font.PLAIN, 25));
         g2.drawString("SCORE: " + score, 40, 150);
@@ -204,7 +212,8 @@ public class TetrisBuilder extends JPanel {
         g2.setColor(Color.BLACK);
         g2.drawString("HOLD", 90, 225);
 
-        if (heldPiece != -1) {
+        //Draw Held Piece
+        if (heldPiece != -1) { //Start of game, when no held piece
             for (int j = 0; j < pieceSize; j++) {
                 int tempType = heldPiece;
                 if (tempType >= 100) {
@@ -214,52 +223,93 @@ public class TetrisBuilder extends JPanel {
                 origin = pieceOrigin[tempType];
 
                 int pieceX = (int) ((queueCoord[j].col - origin.col) * squareWidth + topLeftHoldX + holdWidth / 2 - squareWidth / 2);
-                int pieceY = (int) (topLeftHoldY + squareWidth * (queueCoord[j].row - origin.row) + holdHeight / 2 - squareWidth);
+                int pieceY = (int) (topLeftHoldY+30 - squareWidth * (queueCoord[j].row - origin.row) + holdHeight / 2 - squareWidth);
                 drawBlock(g2, pieceX, pieceY, squareWidth, pieceColors[tempType]);
             }
         }
-
-        //Game Over Condition
-
-
     }
 
-    public Piece nextPiece(boolean valid) {
 
-        if (valid) {
+    //The logic for determining the next piece to be manipulated
+    public Piece nextPiece(boolean comboContinuation) {
+
+        //If combo is being continued:
+        if (comboContinuation) {
             comboCounter++;
         } else {
             comboCounter = -1;
         }
+
         droppedCounter = 0;
         int type = pieceQueue.remove();
         pieceQueue.add(bagOfPieces.remove(0));
         Piece piece = generatePiece(type);
+
+        //If Bag is empty, refill it
         if (bagOfPieces.size() == 0) {
             refillBag();
         }
-        //type = (int) Math.floor(Math.random() * ((numPieces) - 1)) + 1;
-        pieceCounter[type] += 1;
         return piece;
     }
 
-
+    //Given the type of the piece (0-6), return the piece object representing the
+    //current piece
     public Piece generatePiece(int type) {
 
+        //Determine the coordinates and origin of the new piece
         BoardCoord[] coords = pieceCoords[type];
         BoardCoordDouble origin = pieceOrigin[type];
         Piece piece = new Piece(coords, type);
         piece.dropped = false;
         piece.setOrigin(origin);
+
+        //Determine ghost piece location
         BoardCoord[] dropLoc = board.determineDropLoc(piece);
         piece.setDropLoc(dropLoc);
         return piece;
     }
 
+    //Move the piece according to which keys are being pressed
+    //Key delay presents the buffer between keyboard inputs
+    private void runKeyboardInput(){
+        if (tf.left > keyDelay) {
+            leftArrow();
+            tf.left = 1;
+        } else if (tf.left > 0) {
+            tf.left++;
+        }
+        if (tf.right > keyDelay) {
+            rightArrow();
+            tf.right = 1;
+        } else if (tf.right > 0) {
+            tf.right++;
+        }
+        if (tf.down > downDelay) {
+            downArrow();
+            tf.down = 1;
+        } else if (tf.down > 0) {
+            tf.down++;
+        }
+        if (tf.xCounter > upDelay) {
+            upArrowAndXButton();
+            tf.xCounter = 1;
+        } else if (tf.xCounter > 0) {
+            tf.xCounter++;
+        }
+        if (tf.zCounter > upDelay) {
+            zButton();
+            tf.zCounter = 1;
+        } else if (tf.zCounter > 0) {
+            tf.zCounter++;
 
+        }
+    }
+    //This is a task running continuously to determine the future game state
     class RemindTask extends TimerTask {
 
+        //The current piece is "piece"
         Piece piece;
+        //The number of frames
         int modulo = 1;
 
 
@@ -268,47 +318,39 @@ public class TetrisBuilder extends JPanel {
         }
 
         public void run() {
+            //If the tetris game is being played by a player and it is game over:
 
+            if(!tf.receivingAndSending && gameOver){
+                endTimer();
+
+            }
+            //If received the game over message from other end while training
+            else if( justLost && tf.isGameOver==false){
+                tf.resetGame();
+                justLost=false;
+                gameOver=false;
+                endTimer();
+            }
+            //Send game over message, just lost
+            else if (gameOver) {
+                tf.sendResetGame();
+                justLost=true;
+            }
+            //Increase total number of frames
             modulo++;
-            if (tf.left > keyDelay) {
-                leftArrow();
-                tf.left = 1;
-            } else if (tf.left > 0) {
-                tf.left++;
-            }
-            if (tf.right > keyDelay) {
-                rightArrow();
-                tf.right = 1;
-            } else if (tf.right > 0) {
-                tf.right++;
-            }
-            if (tf.down > downDelay) {
-                downArrow();
-                tf.down = 1;
-            } else if (tf.down > 0) {
-                tf.down++;
-            }
-            if (tf.xCounter > upDelay) {
-                upArrowAndXButton();
-                tf.xCounter = 1;
-            } else if (tf.xCounter > 0) {
-                tf.xCounter++;
 
-            }
-            if (tf.zCounter > upDelay) {
-                zButton();
-                tf.zCounter = 1;
-            } else if (tf.zCounter > 0) {
-                tf.zCounter++;
-
-            }
-
+            runKeyboardInput();
             piece = currPiece;
+            //Calculate difference in score
             int scoreCounter = 0;
+            //Determines the number of frames that will go by before moving the piece naturally downward
             int speed = speedCalculation();
 
             if (speed == 0 || modulo % speedCalculation() == 0) {
 
+                //Dropped counter represents the amount of time that has elapsed after the drop
+                //If the piece was recently dropped and dropped counter has reached droppedDelay it is
+                //time to update the next piece to its correct drop location.
                 if (justDropped && droppedCounter == 0) {
                     justDropped = false;
                     currPiece.setDropLoc(board.determineDropLoc(currPiece));
@@ -318,31 +360,38 @@ public class TetrisBuilder extends JPanel {
                     droppedCounter++;
 
                 } else {
+                    //Time to update next piece's drop location
                     droppedCounter = 0;
                     Piece dropped = board.lowerPiece(piece);
-
                     if (dropped.getType() == -999) {
                         System.out.println("modulo: " + modulo);
-                        endTimer();
+                        gameOver = true;
+                        repaint();
                         return;
                     } else if (dropped.getType() < 0) {
 
+                        //Line diff is the difference in the number of lines.
                         int lineDiff = board.dropPiece(currPiece);
+                        //If a non zero number of lines were cleared, then add them to the score
                         if (lineDiff != -1) {
-                            System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
-                            scoreCounter += lineClearCalc(lineDiff + 1);
+                            //Line clear calc returns the number of points for clearing x lines
+                            scoreCounter += lineClearCalc(lineDiff );
                         }
                         piece = nextPiece(true);
 
+                        //If the combo counter is greater than 0, add additional points
                         if (comboCounter > 0) {
                             scoreCounter += comboCounter * 0.5 * pointsPerLine;
                         }
+                        //Increment score by total difference
                         incrementScore(scoreCounter);
+                        //If used shift to switch pieces, now the player may switch to alternate piece
                         if (heldPiece >= 100) {
                             heldPiece -= 100;
                         }
 
                     }
+                    //Update board
                     boardVals = board.getBoard();
                     currPiece = piece;
                 }
@@ -356,12 +405,15 @@ public class TetrisBuilder extends JPanel {
 
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         BoardCoord[] currPieceCoords = currPiece.getCoords();
+        //Player earns 2 times the number of rows skipped from pressing space
         int scoreCounter = 2 * (currPieceCoords[0].row - dropLoc[0].row);
         currPiece.setDropLoc(dropLoc);
         int lineDiff = board.dropPiece(currPiece);
+        //If line diff is -999, then it is game over
         if (lineDiff == -999) {
-            //tf.resetGame();
-            endTimer();
+            gameOver = true;
+            repaint();
+            return;
         } else {
 
             if (comboCounter > 0) {
@@ -369,24 +421,27 @@ public class TetrisBuilder extends JPanel {
             }
 
             Piece nextPieceToPlace;
+            //If cleared 0 lines
             if (lineDiff == -1) {
 
                 nextPieceToPlace = nextPiece(false);
                 currPiece.setDropLoc(board.determineDropLoc(currPiece));
             } else {
-                System.out.println("LINE CLEARED @@@@@@@@@@@@@@@@");
-                scoreCounter += lineClearCalc(lineDiff + 1);
+
+                scoreCounter += lineClearCalc(lineDiff +1);
                 nextPieceToPlace = nextPiece(true);
                 justDropped = true;
                 droppedCounter = droppedDelay;
+
             }
+            //Increment score
             incrementScore(scoreCounter);
             if (heldPiece >= 100) {
                 heldPiece -= 100;
             }
             currPiece = nextPieceToPlace;
         }
-
+        boardVals=board.getBoard();
 
     }
 
@@ -435,7 +490,6 @@ public class TetrisBuilder extends JPanel {
         }
 
         boardVals = board.getBoard();
-        keyDown = true;
     }
 
     public void zButton() {
@@ -514,50 +568,7 @@ public class TetrisBuilder extends JPanel {
         pieceOrigin[4] = new BoardCoordDouble(20.0, 4.0);
         pieceOrigin[5] = new BoardCoordDouble(20.0, 4.0);
         pieceOrigin[6] = new BoardCoordDouble(19.5, 4.5);
-        /**
-         pieceCoords[0][0] = new BoardCoord(19, 3);
-         pieceCoords[0][1] = new BoardCoord(19, 4);
-         pieceCoords[0][2] = new BoardCoord(19, 5);
-         pieceCoords[0][3] = new BoardCoord(20, 5);
-         //Blue J
-         pieceCoords[1][0] = new BoardCoord(19, 3);
-         pieceCoords[1][1] = new BoardCoord(19, 4);
-         pieceCoords[1][2] = new BoardCoord(19, 5);
-         pieceCoords[1][3] = new BoardCoord(20, 3);
-         //o Yellow
-         pieceCoords[2][0] = new BoardCoord(19, 4);
-         pieceCoords[2][1] = new BoardCoord(19, 5);
-         pieceCoords[2][2] = new BoardCoord(20, 4);
-         pieceCoords[2][3] = new BoardCoord(20, 5);
-         //T Purple
-         pieceCoords[3][0] = new BoardCoord(19, 3);
-         pieceCoords[3][1] = new BoardCoord(19, 4);
-         pieceCoords[3][2] = new BoardCoord(19, 5);
-         pieceCoords[3][3] = new BoardCoord(20, 4);
-         //S Green
-         pieceCoords[4][0] = new BoardCoord(19, 3);
-         pieceCoords[4][1] = new BoardCoord(19, 4);
-         pieceCoords[4][2] = new BoardCoord(20, 4);
-         pieceCoords[4][3] = new BoardCoord(20, 5);
-         //Z Red
-         pieceCoords[5][0] = new BoardCoord(19, 5);
-         pieceCoords[5][1] = new BoardCoord(19, 4);
-         pieceCoords[5][2] = new BoardCoord(20, 4);
-         pieceCoords[5][3] = new BoardCoord(20, 3);
-         //I Light Blue
-         pieceCoords[6][0] = new BoardCoord(19, 6);
-         pieceCoords[6][1] = new BoardCoord(19, 5);
-         pieceCoords[6][2] = new BoardCoord(19, 4);
-         pieceCoords[6][3] = new BoardCoord(19, 3);
 
-         pieceOrigin[0] = new BoardCoordDouble(19.0, 4.0);
-         pieceOrigin[1] = new BoardCoordDouble(19.0, 4.0);
-         pieceOrigin[2] = new BoardCoordDouble(19.5, 4.5);
-         pieceOrigin[3] = new BoardCoordDouble(19.0, 4.0);
-         pieceOrigin[4] = new BoardCoordDouble(19.0, 4.0);
-         pieceOrigin[5] = new BoardCoordDouble(19.0, 4.0);
-         pieceOrigin[6] = new BoardCoordDouble(18.5, 4.5);
-         */
         pieceColors = new Color[numPieces];
         pieceColors[0] = new Color(234, 143, 10);
         pieceColors[1] = new Color(0, 0, 236);
@@ -572,10 +583,6 @@ public class TetrisBuilder extends JPanel {
         bagOfPieces = new ArrayList<Integer>();
         refillBag();
 
-        //Types go from 1 to num pieces (usually 7)®
-        //Lets say you picked 3 last time
-        //1 2 3 4 5 6
-        //1 2 4 5 6 7
         pieceQueue = new LinkedList<>();
         //ieceQueue.add(5);
         for (int i = 0; i < queueSize; i++) {
@@ -592,8 +599,7 @@ public class TetrisBuilder extends JPanel {
     private void endTimer() {
         timer.cancel();
         timer.purge();
-        gameOver = true;
-        repaint();
+
         long endTime = System.currentTimeMillis();
         long duration = (endTime - startTime);
         System.out.println("total time: " + duration);
@@ -676,7 +682,7 @@ public class TetrisBuilder extends JPanel {
         double sigmoidVal = minSpeed / (1 + Math.exp((score - pointsToReachMidpoint) / 10000.0));
         // = -4E-08x3 + 9E-05x2 - 0.0708x + 20
 
-        return (int) minSpeed;//(sigmoidVal);//(int) (Math.round(speed));
+        return (int)(sigmoidVal);//(int) (Math.round(speed));
         //return (int) (Math.round(sigmoidVal));
     }
 

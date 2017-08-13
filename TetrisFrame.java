@@ -23,10 +23,10 @@ public class TetrisFrame extends JFrame implements KeyListener {
     public int zCounter = 0;
     private socketThread t1;
     private int episodeCounter = 0;
-    private boolean isGameOver = false;
+    public boolean isGameOver = false;
     public boolean receivingAndSending = true;
     private TetrisBuilder panel;
-    public int speed = 100;
+    public int speed = 20;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -57,15 +57,22 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
         public void run() {
             try {
+                long startTime = System.currentTimeMillis();
+                int counter = 0;
                 while (true) {
 
                     String fromclient = "";
                     Thread.sleep(speed * 2);
+                    long endTime=System.currentTimeMillis();
+                    long duration = (endTime - startTime);
+                    startTime=endTime;
+                    counter ++;
+                    System.out.println(counter + " " +duration);
                     String outputLine = generateFeatureArray();
                     outs.println(outputLine);
                     fromclient = inFromClient.readLine();
 
-                    System.out.println("RECEIVED:" + fromclient);
+                    //System.out.println("received: " + fromclient);
 
                     switch (fromclient) {
                         case "left":
@@ -91,7 +98,8 @@ public class TetrisFrame extends JFrame implements KeyListener {
                             panel.zButton();
                             break;
                         case "reset":
-                            isGameOver = false;
+
+                            isGameOver=false;
                             break;
                         case "end":
                             System.exit(0);
@@ -184,28 +192,36 @@ public class TetrisFrame extends JFrame implements KeyListener {
 
     public void keyTyped(KeyEvent e) {
     }
-
-    public void resetGame() {
-        episodeCounter++;
-        System.out.println("Episode Counter: "+ episodeCounter);
-        if (receivingAndSending) {
+    public void sendResetGame(){
+        if(receivingAndSending) {
             isGameOver = true;
-            t1.pause(4 * speed);
+        }else{
+            isGameOver=false;
+        }
+    }
+    public void resetGame() {
+
+
+            episodeCounter++;
+            System.out.println("Episode Counter: "+ episodeCounter);
+            isGameOver = false;
+            //t1.pause(4 * speed);
             panel.setVisible(false);
             panel.removeAll();
-            revalidate();
-            repaint();
+
             left = 0;
             right = 0;
             down = 0;
             xCounter = 0;
             zCounter = 0;
             TetrisBuilder newPanel = new TetrisBuilder(this);
-            newPanel.setVisible(true);
-            add(newPanel, BorderLayout.CENTER);
             panel = newPanel;
+            panel.setVisible(true);
+            add(panel, BorderLayout.CENTER);
+            repaint();
+            revalidate();
 
-        }
+
     }
 
     public TetrisFrame() {
