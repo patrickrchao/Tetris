@@ -93,7 +93,6 @@ public class Board {
             piece.updateCoords(dropLoc);
             //Update the board
             boolean flag = updateBoard(piece);
-            System.out.println(flag);
             //If not valid, end the game
             if(!flag){
                 return -999;
