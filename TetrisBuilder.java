@@ -56,16 +56,16 @@ public class TetrisBuilder extends JPanel {
     private int droppedCounter = 0;
     private int droppedDelay = 2;
     private int pointsPerLine = 100;
-    private boolean justDropped = false;
     private int minSpeed = 20;
     private int pointsToReachMidpoint = 10000;
 
     private int comboCounter = -1;//thank you nintendo !
-    private boolean justLost=false;
+    private boolean justLost = false;
+
     //Draws the actual screen given a graphics 2D object
     public void drawGrid(Graphics2D g2) {
         //If the player loses the game, it draws the game over text
-        if (!(justLost && tf.isGameOver==false) && gameOver) {
+        if (!(justLost && tf.isGameOver == false) && gameOver) {
             //gameOver=false;
             //Red text is more intense
             g2.setColor(Color.RED);
@@ -73,7 +73,6 @@ public class TetrisBuilder extends JPanel {
             g2.drawString("Final Score: " + score, 300, 760);
 
         }
-
 
 
         int topLeftX = 250;
@@ -223,7 +222,7 @@ public class TetrisBuilder extends JPanel {
                 origin = pieceOrigin[tempType];
 
                 int pieceX = (int) ((queueCoord[j].col - origin.col) * squareWidth + topLeftHoldX + holdWidth / 2 - squareWidth / 2);
-                int pieceY = (int) (topLeftHoldY+30 - squareWidth * (queueCoord[j].row - origin.row) + holdHeight / 2 - squareWidth);
+                int pieceY = (int) (topLeftHoldY + 30 - squareWidth * (queueCoord[j].row - origin.row) + holdHeight / 2 - squareWidth);
                 drawBlock(g2, pieceX, pieceY, squareWidth, pieceColors[tempType]);
             }
         }
@@ -271,7 +270,7 @@ public class TetrisBuilder extends JPanel {
 
     //Move the piece according to which keys are being pressed
     //Key delay presents the buffer between keyboard inputs
-    private void runKeyboardInput(){
+    private void runKeyboardInput() {
         if (tf.left > keyDelay) {
             leftArrow();
             tf.left = 1;
@@ -304,6 +303,7 @@ public class TetrisBuilder extends JPanel {
 
         }
     }
+
     //This is a task running continuously to determine the future game state
     class RemindTask extends TimerTask {
 
@@ -320,21 +320,21 @@ public class TetrisBuilder extends JPanel {
         public void run() {
             //If the tetris game is being played by a player and it is game over:
 
-            if(!tf.receivingAndSending && gameOver){
+            if (!tf.receivingAndSending && gameOver) {
                 endTimer();
 
             }
             //If received the game over message from other end while training
-            else if( justLost && tf.isGameOver==false){
+            else if (justLost && tf.isGameOver == false) {
                 tf.resetGame();
-                justLost=false;
-                gameOver=false;
+                justLost = false;
+                gameOver = false;
                 endTimer();
             }
             //Send game over message, just lost
             else if (gameOver) {
                 tf.sendResetGame();
-                justLost=true;
+                justLost = true;
             }
             //Increase total number of frames
             modulo++;
@@ -351,74 +351,71 @@ public class TetrisBuilder extends JPanel {
                 //Dropped counter represents the amount of time that has elapsed after the drop
                 //If the piece was recently dropped and dropped counter has reached droppedDelay it is
                 //time to update the next piece to its correct drop location.
-                if (justDropped && droppedCounter == 0) {
-                    justDropped = false;
-                    currPiece.setDropLoc(board.determineDropLoc(currPiece));
-                }
 
-                if (droppedCounter > 0 && droppedCounter < droppedDelay) {
-                    droppedCounter++;
+                //Time to update next piece's drop location
+                droppedCounter = 0;
+                Piece dropped = board.lowerPiece(piece);
 
-                } else {
-                    //Time to update next piece's drop location
-                    droppedCounter = 0;
-                    Piece dropped = board.lowerPiece(piece);
-                    if (dropped.getType() == -999) {
+               if (dropped.getType() < 0) {
+
+                    //Line diff is the difference in the number of lines.
+                    int lineDiff = board.dropPiece(currPiece);
+                    if (lineDiff == -999) {
+                        gameOver();
                         System.out.println("modulo: " + modulo);
-                        gameOver = true;
-                        repaint();
                         return;
-                    } else if (dropped.getType() < 0) {
 
-                        //Line diff is the difference in the number of lines.
-                        int lineDiff = board.dropPiece(currPiece);
-                        //If a non zero number of lines were cleared, then add them to the score
-                        if (lineDiff != -1) {
-                            //Line clear calc returns the number of points for clearing x lines
-                            scoreCounter += lineClearCalc(lineDiff );
-                        }
+                        //If game is continuing and the piece is at the bottom of the board (type <0)
+                    }
+                    //If a non zero number of lines were cleared, then add them to the score
+                    if (lineDiff != -1) {
+                        //Line clear calc returns the number of points for clearing x lines
+                        scoreCounter += lineClearCalc((lineDiff + 1) * (-1));
                         piece = nextPiece(true);
 
-                        //If the combo counter is greater than 0, add additional points
-                        if (comboCounter > 0) {
-                            scoreCounter += comboCounter * 0.5 * pointsPerLine;
-                        }
-                        //Increment score by total difference
-                        incrementScore(scoreCounter);
-                        //If used shift to switch pieces, now the player may switch to alternate piece
-                        if (heldPiece >= 100) {
-                            heldPiece -= 100;
-                        }
-
+                    } else {
+                        piece = nextPiece(false);
                     }
-                    //Update board
-                    boardVals = board.getBoard();
-                    currPiece = piece;
+
+
+                    //If the combo counter is greater than 0, add additional points
+                    if (comboCounter > 0) {
+                        //scoreCounter += comboCounter * 0.5 * pointsPerLine;
+                    }
+                    //Increment score by total difference
+                    incrementScore(scoreCounter);
+                    //If used shift to switch pieces, now the player may switch to alternate piece
+                    if (heldPiece >= 100) {
+                        heldPiece -= 100;
+                    }
+
                 }
+                //Update board
+                boardVals = board.getBoard();
+                currPiece = piece;
+
 
             }
             repaint();
         }
     }
 
+
+    //Game logic for hard dropping pieces
     public void spaceButton() {
 
         BoardCoord[] dropLoc = board.determineDropLoc(currPiece);
         BoardCoord[] currPieceCoords = currPiece.getCoords();
         //Player earns 2 times the number of rows skipped from pressing space
         int scoreCounter = 2 * (currPieceCoords[0].row - dropLoc[0].row);
+
         currPiece.setDropLoc(dropLoc);
         int lineDiff = board.dropPiece(currPiece);
         //If line diff is -999, then it is game over
         if (lineDiff == -999) {
-            gameOver = true;
-            repaint();
             return;
         } else {
 
-            if (comboCounter > 0) {
-                scoreCounter += comboCounter * 0.5 * pointsPerLine;
-            }
 
             Piece nextPieceToPlace;
             //If cleared 0 lines
@@ -427,11 +424,14 @@ public class TetrisBuilder extends JPanel {
                 nextPieceToPlace = nextPiece(false);
                 currPiece.setDropLoc(board.determineDropLoc(currPiece));
             } else {
-
-                scoreCounter += lineClearCalc(lineDiff +1);
+                scoreCounter += lineClearCalc((lineDiff + 1) * (-1));
                 nextPieceToPlace = nextPiece(true);
-                justDropped = true;
-                droppedCounter = droppedDelay;
+
+                //droppedCounter = droppedDelay;
+
+            }
+            if (comboCounter > 0) {
+                //scoreCounter += comboCounter * 0.5 * pointsPerLine;
 
             }
             //Increment score
@@ -441,13 +441,23 @@ public class TetrisBuilder extends JPanel {
             }
             currPiece = nextPieceToPlace;
         }
-        boardVals=board.getBoard();
+        boardVals = board.getBoard();
 
     }
 
-    public int lineClearCalc(int linesCleared) {
+    private void gameOver(){
+        if(!tf.receivingAndSending) {
+            endTimer();
 
-        int score = (int) (Math.pow(linesCleared, 3) / 6.0 - Math.pow(linesCleared, 2) + 23 * linesCleared / 6.0 - 2);
+        }
+        gameOver = true;
+        repaint();
+    }
+    public int lineClearCalc(int linesCleared) {
+        int score=0;
+        if(linesCleared>0) {
+            score = (int) (Math.pow(linesCleared, 3) / 6.0 - Math.pow(linesCleared, 2) + 23 * linesCleared / 6.0 - 2);
+        }
         return score * pointsPerLine;
     }
 
@@ -483,13 +493,12 @@ public class TetrisBuilder extends JPanel {
 
     public void downArrow() {
 
-
         Piece dropped = board.lowerPiece(currPiece);
         if (dropped.getType() > 0) {
             incrementScore(1);
         }
-
         boardVals = board.getBoard();
+
     }
 
     public void zButton() {
@@ -670,20 +679,10 @@ public class TetrisBuilder extends JPanel {
     }
 
     private int speedCalculation() {
-        //modulo is 0
-        //min speed is 15
-        //max speed is 5
 
-        long endTime = System.currentTimeMillis();
-        long duration = (endTime - startTime);
-        double numberOfSec = ((double) duration) / 1000.0;
-        double progress = numberOfSec + 5 * score;
-        //System.out.println(numberOfSec+ " "+progress+" "+speed);
         double sigmoidVal = minSpeed / (1 + Math.exp((score - pointsToReachMidpoint) / 10000.0));
-        // = -4E-08x3 + 9E-05x2 - 0.0708x + 20
 
-        return (int)(sigmoidVal);//(int) (Math.round(speed));
-        //return (int) (Math.round(sigmoidVal));
+        return (int) (sigmoidVal);//(int) (Math.round(speed));
     }
 
     private void incrementScore(int additionalScore) {
@@ -740,7 +739,6 @@ public class TetrisBuilder extends JPanel {
     public Board getBoard() {
         return board;
     }
-
 
 
     public Piece getCurrPiece() {

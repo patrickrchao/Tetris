@@ -78,7 +78,7 @@ public class Board {
         BoardCoord[] dropLoc = new BoardCoord[pieceLength];
         for (int i = 0; i < pieceLength; i++) {
             dropLoc[i] = new BoardCoord(height + pieceCoord[i].row - minHeight, pieceCoord[i].col);
-           // System.out.println(dropLoc[i].row + " " + dropLoc[i].col);
+
         }
         return dropLoc;
     }
@@ -93,6 +93,7 @@ public class Board {
             piece.updateCoords(dropLoc);
             //Update the board
             boolean flag = updateBoard(piece);
+            System.out.println(flag);
             //If not valid, end the game
             if(!flag){
                 return -999;
@@ -149,7 +150,7 @@ public class Board {
             board=tempBoard;
         }
         piece.setDropLoc(determineDropLoc(piece));
-        return total-1;
+        return total*(-1)-1;
 
     }
 
@@ -167,17 +168,24 @@ public class Board {
 
 
     public Piece lowerPiece(Piece piece) {
+        BoardCoord[] coordinates = new BoardCoord[piece.getCoords().length];
+        for(int i=0;i<coordinates.length;i++){
+            coordinates[i]=new BoardCoord(0,0);
+        }
         if (piece.checkPieceAtDropLoc()) {
-            int diff = dropPiece(piece);
-            //If game over, -999
-            BoardCoord[] coordinates = new BoardCoord[piece.getCoords().length];
-            for(int i=0;i<coordinates.length;i++){
-                coordinates[i]=new BoardCoord(0,0);
-            }
-            return new Piece(coordinates, diff);
+            //boolean flag = updateBoard(piece);
+            //If not valid, end the game
+            int type = -1;
+            //if(!flag){
+                //type= -999;
+            //}
+
+            return new Piece(coordinates, type);
         } else {
 
             piece.moveDown(board);
+
+            //Update the board
 
             return piece;
         }
