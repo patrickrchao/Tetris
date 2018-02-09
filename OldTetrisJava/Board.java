@@ -13,45 +13,26 @@ public class Board {
     public Board(int numRows, int numCols) {
 
         board = new int[numRows][numCols];
-/**
+        /**
         board[0][0]=1;
         board[0][1]=1;
         board[0][2]=1;
         board[0][3]=1;
         board[0][4]=1;
         board[0][5]=1;
-        board[0][6]=1;
-        board[0][7]=1;
-        board[0][8]=1;
-
-
+        board[0][9]=1;
 
         board[1][0]=1;
         board[1][1]=1;
+        board[1][2]=1;
         board[1][4]=1;
 
-        board[1][6]=1;
-        board[1][7]=1;
-        board[1][8]=1;
+
+
         board[1][9]=1;
+        board[1][8]=1;
 
-
-        board[1][2]=1;
-        board[3][5]=1;
-        board[2][1]=1;
-        board[7][2]=1;
-
-
-        board[0][3]=1;
-        board[0][4]=1;
-        board[0][6]=1;
-        board[1][0]=1;
-        board[1][1]=1;
-        board[1][2]=1;
-        board[1][3]=1;
-        board[1][4]=1;
-        board[1][6]=1;
-         */
+*/
     }
 
 

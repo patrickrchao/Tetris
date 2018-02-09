@@ -24,9 +24,9 @@ public class TetrisFrame extends JFrame implements KeyListener {
     private socketThread t1;
     private int episodeCounter = 0;
     public boolean isGameOver = false;
-    public boolean receivingAndSending = true;
+    public boolean receivingAndSending = false;
     private TetrisBuilder panel;
-    public int speed = 50;
+    public int speed = 35;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -62,12 +62,13 @@ public class TetrisFrame extends JFrame implements KeyListener {
                 while (true) {
 
                     String fromclient = "";
-                    Thread.sleep(speed * 2);
+                    Thread.sleep(speed *2);
                     long endTime=System.currentTimeMillis();
                     long duration = (endTime - startTime);
                     startTime=endTime;
                     counter ++;
                     //System.out.println(counter + " " +duration);
+                    //System.out.println(counter );
                     String outputLine = generateFeatureArray();
                     outs.println(outputLine);
                     fromclient = inFromClient.readLine();
@@ -96,6 +97,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
                             break;
                         case "z":
                             panel.zButton();
+
                             break;
                         case "reset":
 
@@ -103,10 +105,11 @@ public class TetrisFrame extends JFrame implements KeyListener {
                             break;
                         case "end":
                             System.exit(0);
+                            break;
+
 
 
                     }
-
 
                 }
             } catch (Exception e) {
@@ -159,7 +162,7 @@ public class TetrisFrame extends JFrame implements KeyListener {
             case KeyEvent.VK_Z:
                 System.out.println("z");
                 zCounter = 10;
-                //resetGame();
+                resetGame();
                 break;
             case KeyEvent.VK_SHIFT:
                 System.out.println("shift");
@@ -202,24 +205,24 @@ public class TetrisFrame extends JFrame implements KeyListener {
     public void resetGame() {
 
 
-            episodeCounter++;
-            System.out.println("Episode Counter: "+ episodeCounter);
-            isGameOver = false;
-            //t1.pause(4 * speed);
-            panel.setVisible(false);
-            panel.removeAll();
+        episodeCounter++;
+        System.out.println("Episode Counter: "+ episodeCounter);
+        isGameOver = false;
+        //t1.pause(4 * speed);
+        panel.setVisible(false);
+        panel.removeAll();
 
-            left = 0;
-            right = 0;
-            down = 0;
-            xCounter = 0;
-            zCounter = 0;
-            TetrisBuilder newPanel = new TetrisBuilder(this);
-            panel = newPanel;
-            panel.setVisible(true);
-            add(panel, BorderLayout.CENTER);
-            repaint();
-            revalidate();
+        left = 0;
+        right = 0;
+        down = 0;
+        xCounter = 0;
+        zCounter = 0;
+        TetrisBuilder newPanel = new TetrisBuilder(this);
+        panel = newPanel;
+        panel.setVisible(true);
+        add(panel, BorderLayout.CENTER);
+        repaint();
+        revalidate();
 
 
     }

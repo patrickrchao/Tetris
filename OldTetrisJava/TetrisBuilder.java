@@ -54,7 +54,6 @@ public class TetrisBuilder extends JPanel {
     private ArrayList<Integer> bagOfPieces;
     private long startTime;
     private int droppedCounter = 0;
-    private int droppedDelay = 2;
     private int pointsPerLine = 100;
     private int minSpeed = 20;
     private int pointsToReachMidpoint = 10000;
@@ -63,7 +62,7 @@ public class TetrisBuilder extends JPanel {
     private boolean justLost = false;
 
     //Draws the actual screen given a graphics 2D object
-    public void drawGrid(Graphics2D g2) {
+    private void drawGrid(Graphics2D g2) {
         //If the player loses the game, it draws the game over text
         if (!(justLost && tf.isGameOver == false) && gameOver) {
             //gameOver=false;
@@ -230,7 +229,7 @@ public class TetrisBuilder extends JPanel {
 
 
     //The logic for determining the next piece to be manipulated
-    public Piece nextPiece(boolean comboContinuation) {
+    private Piece nextPiece(boolean comboContinuation) {
 
         //If combo is being continued:
         if (comboContinuation) {
@@ -253,7 +252,7 @@ public class TetrisBuilder extends JPanel {
 
     //Given the type of the piece (0-6), return the piece object representing the
     //current piece
-    public Piece generatePiece(int type) {
+    private Piece generatePiece(int type) {
 
         //Determine the coordinates and origin of the new piece
         BoardCoord[] coords = pieceCoords[type];
@@ -335,6 +334,11 @@ public class TetrisBuilder extends JPanel {
             else if (gameOver) {
                 tf.sendResetGame();
                 justLost = true;
+                try {
+                    Thread.sleep(300);
+                }catch(Exception e){
+
+                }
             }
             //Increase total number of frames
             modulo++;
@@ -346,7 +350,7 @@ public class TetrisBuilder extends JPanel {
             //Determines the number of frames that will go by before moving the piece naturally downward
             int speed = speedCalculation();
 
-            if (speed == 0 || modulo % speedCalculation() == 0) {
+            if (speed == 0 || modulo % speed == 0) {
 
                 //Dropped counter represents the amount of time that has elapsed after the drop
                 //If the piece was recently dropped and dropped counter has reached droppedDelay it is
@@ -362,7 +366,6 @@ public class TetrisBuilder extends JPanel {
                     int lineDiff = board.dropPiece(currPiece);
                     if (lineDiff == -999) {
                         gameOver();
-                        System.out.println("modulo: " + modulo);
                         return;
 
                         //If game is continuing and the piece is at the bottom of the board (type <0)
@@ -428,11 +431,9 @@ public class TetrisBuilder extends JPanel {
                 nextPieceToPlace = nextPiece(true);
 
                 //droppedCounter = droppedDelay;
-
             }
             if (comboCounter > 0) {
                 //scoreCounter += comboCounter * 0.5 * pointsPerLine;
-
             }
             //Increment score
             incrementScore(scoreCounter);
@@ -448,12 +449,11 @@ public class TetrisBuilder extends JPanel {
     private void gameOver(){
         if(!tf.receivingAndSending) {
             endTimer();
-
         }
         gameOver = true;
         repaint();
     }
-    public int lineClearCalc(int linesCleared) {
+    private int lineClearCalc(int linesCleared) {
         int score=0;
         if(linesCleared>0) {
             score = (int) (Math.pow(linesCleared, 3) / 6.0 - Math.pow(linesCleared, 2) + 23 * linesCleared / 6.0 - 2);
@@ -523,13 +523,8 @@ public class TetrisBuilder extends JPanel {
         }
     }
 
-
-    public TetrisBuilder(TetrisFrame theTF) {
-        super(true);
-        setFocusable(true);
-        setFocusTraversalKeysEnabled(false);
-        tf = theTF;
-        speed = theTF.speed;
+    //Initiailizes the piece locations, origins, and colors
+    private void initializePieces(){
         pieceCoords = new BoardCoord[numPieces][pieceSize];
         pieceOrigin = new BoardCoordDouble[numPieces];
         //Orange L
@@ -585,7 +580,15 @@ public class TetrisBuilder extends JPanel {
         pieceColors[3] = new Color(139, 0, 235);
         pieceColors[4] = new Color(32, 244, 9);
         pieceColors[5] = new Color(233, 0, 0);
-        pieceColors[6] = new Color(30, 239, 236);
+        pieceColors[6] = new Color(30, 239, 236);}
+
+    public TetrisBuilder(TetrisFrame theTF) {
+        super(true);
+        setFocusable(true);
+        setFocusTraversalKeysEnabled(false);
+        tf = theTF;
+        speed = theTF.speed;
+        initializePieces();
         background = createBackground();
         board = new Board(numRows, numCols);
         boardVals = board.getBoard();
@@ -593,7 +596,7 @@ public class TetrisBuilder extends JPanel {
         refillBag();
 
         pieceQueue = new LinkedList<>();
-        //ieceQueue.add(5);
+        //pieceQueue.add(4);
         for (int i = 0; i < queueSize; i++) {
             int top = bagOfPieces.remove(0);
             pieceQueue.add(top);
@@ -605,15 +608,14 @@ public class TetrisBuilder extends JPanel {
     }
 
 
+    //This is for the end of the game, to end the game timer
     private void endTimer() {
         timer.cancel();
         timer.purge();
-
-        long endTime = System.currentTimeMillis();
-        long duration = (endTime - startTime);
-        System.out.println("total time: " + duration);
+        System.out.println("Score:  " + score);
     }
 
+    //Creating the background of the JPanel
     private BufferedImage createBackground() {
         BufferedImage bg = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = bg.createGraphics();
@@ -621,14 +623,19 @@ public class TetrisBuilder extends JPanel {
         return bg;
     }
 
-    public void drawBlock(Graphics2D g2, int upperX, int upperY, int sidelength, Color color) {
+    //Drawing the individual nice looking blocks for the tetris pieces
+    private void drawBlock(Graphics2D g2, int upperX, int upperY, int sidelength, Color color) {
+        //Color is the color of the original block, the center
         Color temp = color;
         double lightnessTint = 1.0 * 3 / 4;
-        //darker 2 is darker
+
         double darknessShade1 = 1.0 * 5 / 6;
         double darknessShade2 = 1.0 * 1 / 2;
+        //Lighter shade of original color goes on top
         Color lighter = new Color((int) ((255 - temp.getRed()) * lightnessTint + temp.getRed()), (int) ((255 - temp.getGreen()) * lightnessTint + temp.getGreen()), (int) ((255 - temp.getBlue()) * lightnessTint + temp.getBlue()));
+        //Darker1 is for the sides, a little bit darker
         Color darker1 = new Color((int) (temp.getRed() * darknessShade1), (int) (temp.getGreen() * darknessShade1), (int) (temp.getBlue() * darknessShade1));
+        //Darker 2 is for the bottom, the darkest
         Color darker2 = new Color((int) (temp.getRed() * darknessShade2), (int) (temp.getGreen() * darknessShade2), (int) (temp.getBlue() * darknessShade2));
         g2.setColor(color);
         g2.fillRect(upperX, upperY, sidelength, sidelength);
