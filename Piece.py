@@ -17,9 +17,8 @@ from collections import deque
 np.random.seed(1)
 random.seed(1)
 class Piece:
-
     bag = deque()
-
+    
     def __init__(self, current_piece_id,  offsets = None, origin = None,use_default =True):
         self.id = current_piece_id
 
@@ -31,8 +30,6 @@ class Piece:
         else:
         	self.offsets = np.copy(offsets)
         	self.origin = np.copy(origin)
-
-
 
     def move(self, direction):
         self.origin += direction

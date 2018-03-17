@@ -11,13 +11,7 @@ import numpy as np
 from Piece import Piece
 import Constants
 
-
-
-
 class GameState:
-
-    
-
     def __init__(self):
         self.grid = np.zeros((Constants.board_rows+2,Constants.board_columns))
         self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
@@ -114,18 +108,16 @@ class GameState:
         self.clearFullRows()
         self.current_piece = Piece.getNextPiece()
 
-
     #Determine the drop height for the current piece by moving down
     def determineDropHeight(self):
         #print(self.current_piece.origin)
         test_piece = Piece.copy(self.current_piece)
         maxHeight = self.current_piece.origin[1,0]
-        for i in range(Constants.board_rows+2-(int)(np.ceil(maxHeight))):
+        for i in range(1,Constants.board_rows+2-(int)(np.ceil(maxHeight))):
             success = self.collides(test_piece)
             currentRow = i + maxHeight
             if not success:
-                return maxHeight
-            maxHeight = i
+                return currentRow-1
             Piece.move(test_piece,DIRS["DOWN"])
         return maxHeight
 
@@ -159,7 +151,6 @@ class GameState:
             self.printBoard()
             self.time_since_drop = 0
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
-            print(Piece.bag)
             if not success:
                 self.updateBoardWithPiece()
                 self.clearFullRows()
