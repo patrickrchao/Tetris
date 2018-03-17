@@ -17,7 +17,7 @@ from telemetry import Telemetry
 class GameState:
     def __init__(self):
         self.grid = np.zeros((Constants.board_rows+2,Constants.board_columns))
-        #self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
+        self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
         Piece.fillBag()
         self.current_piece = Piece.getNextPiece()
         self.held_piece = 0
@@ -55,12 +55,13 @@ class GameState:
     def attemptAction(self, action):
         test_piece = Piece.copy(self.current_piece)
         action(test_piece)
-        success = self.collides(test_piece)
+        success = not self.collides(test_piece)
         if success:
             action(self.current_piece)
         return success
 
     #Check if a piece collides or is out of bounds
+    #Returns true if they collide false otherwise
     def collides(self, piece):    
         piece_coordinates = (piece.origin + piece.offsets).astype(int)
         #Check if out of board range
@@ -77,11 +78,11 @@ class GameState:
                 #Flatten Grid
 
                 flat_grid = self.grid.flatten()
-                #print(flat_grid[210:])
                 grid_values = np.take(flat_grid,transformed_coordinates)
+                #print(grid_values)
                 if np.sum(grid_values)==0:
-                    return True
-        return False
+                    return False
+        return True
 
 
     # Hold the currently held piece
@@ -113,15 +114,16 @@ class GameState:
 
     #Determine the drop height for the current piece by moving down
     def determineDropHeight(self):
+        #print(self.current_piece.origin)
         test_piece = Piece.copy(self.current_piece)
-        maxHeight = current_piece.origin[0,1]
-        for i in range(Constants.board_rows-maxHeight):
+        maxHeight = self.current_piece.origin[1,0]
+        for i in range(Constants.board_rows+2-(int)(np.ceil(maxHeight))):
             success = self.collides(test_piece)
             currentRow = i + maxHeight
             if not success:
                 return maxHeight
             maxHeight = i
-            Piece.move(test_piece,DIRS.DOWN)
+            Piece.move(test_piece,DIRS["DOWN"])
         return maxHeight
 
     #Check if line needs to be cleared based on current piece
@@ -153,10 +155,9 @@ class GameState:
         if self.time_since_drop >= self.time_per_drop:
             self.sendTelemetry()
             self.time_since_drop = 0
-            piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
+            print(Piece.bag)
             if not success:
-                
                 self.updateBoardWithPiece()
                 self.clearFullRows()
                 self.current_piece = Piece.getNextPiece()

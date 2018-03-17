@@ -31,7 +31,7 @@ class Tetris:
                 accumulator -= self.TIMESTEP
 
     def handle_input(self):
-        input_value = "ArrowDown"
+        input_value = "Space"
         self.key_logger[input_value] = True
 
     def update(self,dt):
@@ -42,4 +42,3 @@ class Tetris:
                 if self.key_logger[key] == True:
                     self.game_state.keyAction(key,dt)
                     self.key_logger[key] == False
-        
