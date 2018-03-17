@@ -11,9 +11,11 @@
 # Contains the Piece game logic
 
 import numpy as np
+import random
 import Constants
 from collections import deque
-np.random.seed(5)
+np.random.seed(1)
+random.seed(1)
 class Piece:
 
     bag = deque()
@@ -24,13 +26,12 @@ class Piece:
         #Offsets is a 2x4 numpy matrix
         #Origin is a 2x1 numpy matrix
         if use_default:
-            self.offsets = Constants.piece_offsets[self.id]
-            self.origin = Constants.piece_origins[self.id]
+            self.offsets = np.copy(Constants.piece_offsets[self.id])
+            self.origin = np.copy(Constants.piece_origins[self.id])
         else:
-        	self.offsets = offsets
-        	self.origin = origin
+        	self.offsets = np.copy(offsets)
+        	self.origin = np.copy(origin)
 
-        	
 
 
     def move(self, direction):
@@ -47,12 +48,13 @@ class Piece:
     def getNextPiece():
         piece_id = Piece.bag.popleft()
         #if bag is getting almost empty, refill bag
-        if len(Piece.bag)<5:
-            Piece.fillBag(7)
+        if len(Piece.bag)<=6:
+            Piece.fillBag()
         return Piece(piece_id)
 
      #Initializes the bag of pieces given a bag size
-    def fillBag(bag_size = 10):
-        nextPieces = np.random.randint(1,8,bag_size).tolist()
+    def fillBag():
+        nextPieces = np.arange(1,8).tolist()
+        random.shuffle(nextPieces)
         Piece.bag.extend(nextPieces)
 

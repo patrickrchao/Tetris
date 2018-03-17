@@ -16,7 +16,6 @@ class Tetris:
 
     def __init__(self):
         self.game_state = GameState()
-        self.begin()
 
     def begin(self):
         accumulator = 0
@@ -32,7 +31,7 @@ class Tetris:
                 accumulator -= self.TIMESTEP
 
     def handle_input(self):
-        input_value = "ArrowDown"
+        input_value = "Space"
         self.key_logger[input_value] = True
 
     def update(self,dt):
@@ -47,4 +46,5 @@ class Tetris:
 
 
 if __name__ == '__main__':
-    Tetris()
+    tetris = Tetris()
+    tetris.begin()
