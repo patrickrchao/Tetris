@@ -41,9 +41,4 @@ class Tetris:
                 if self.key_logger[key] == True:
                     self.game_state.keyAction(key,dt)
                     self.key_logger[key] = False
-        
 
-
-if __name__ == '__main__':
-    tetris = Tetris()
-    tetris.begin()
