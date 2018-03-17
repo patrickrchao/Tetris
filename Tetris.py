@@ -16,7 +16,6 @@ class Tetris:
 
     def __init__(self):
         self.game_state = GameState()
-        self.begin()
 
     def begin(self):
         accumulator = 0
@@ -44,7 +43,3 @@ class Tetris:
                     self.game_state.keyAction(key,dt)
                     self.key_logger[key] == False
         
-
-
-if __name__ == '__main__':
-    Tetris()

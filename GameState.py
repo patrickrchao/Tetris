@@ -10,14 +10,11 @@ import numpy as np
 
 from Piece import Piece
 import Constants
-
+from telemetry import Telemetry
 
 
 
 class GameState:
-
-    
-
     def __init__(self):
         self.grid = np.zeros((Constants.board_rows+2,Constants.board_columns))
         #self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
@@ -154,7 +151,7 @@ class GameState:
     def update(self,dt):
         self.time_since_drop += dt
         if self.time_since_drop >= self.time_per_drop:
-            self.printBoard()
+            self.sendTelemetry()
             self.time_since_drop = 0
             piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
@@ -164,19 +161,17 @@ class GameState:
                 self.clearFullRows()
                 self.current_piece = Piece.getNextPiece()
 
-
-
     def generateJSON(self):
         # TODO
         return 
 
-    def printBoard(self):
+    def sendTelemetry(self):
         temp_grid = self.grid.copy()
         piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
-            
             temp_grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
-        print(temp_grid)
+        json = temp_grid.tolist()
+        Telemetry.emit('gameframe', {'data': json})
 
 
 DIRS = {
