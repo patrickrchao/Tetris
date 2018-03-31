@@ -31,7 +31,7 @@ class Tetris:
                 accumulator -= self.TIMESTEP
 
     def handle_input(self):
-        input_value = "Space"
+        input_value = "None"
         self.key_logger[input_value] = True
 
     def update(self,dt):
