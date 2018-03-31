@@ -28,6 +28,9 @@ class GameState:
         self.time_per_drop = Constants.max_time_per_drop
         self.down_state_held_time = 0
 
+        Telemetry.subscribe('action', self.handle_action)
+        Telemetry.subscribe('end_action', self.handle_end_action)
+
     #Still temporary
     #Given an action, attempts to perform the action
     def keyAction(self, key,dt): 
