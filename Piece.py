@@ -14,8 +14,8 @@ import numpy as np
 import random
 import Constants
 from collections import deque
-np.random.seed(1)
-random.seed(1)
+#np.random.seed(1)
+#random.seed(1)
 class Piece:
     bag = deque()
     

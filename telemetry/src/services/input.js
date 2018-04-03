@@ -16,9 +16,9 @@ const ACTION_MAP = {
 	arrowup: 	ACTION_ENUM.R_CW,
 	c: 			ACTION_ENUM.R_CW,
 	z: 			ACTION_ENUM.R_CCW,
-	shift: 		ACTION_ENUM.SOFT,
+	arrowdown: 	ACTION_ENUM.SOFT,
 	' ': 		ACTION_ENUM.HARD,
-	h:  		ACTION_ENUM.HOLD 
+	shift:  	ACTION_ENUM.HOLD 
 };
 
 console.log(ACTION_MAP)

@@ -11,16 +11,16 @@ import numpy as np
 from Piece import Piece
 import Constants
 from telemetry import Telemetry
-
+from input_game import Input
 
 
 class GameState:
     def __init__(self):
         self.grid = np.zeros((Constants.board_rows+2,Constants.board_columns))
-        self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
+        #self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
         Piece.fillBag()
         self.current_piece = Piece.getNextPiece()
-        self.held_piece = 0
+        self.held_piece = None
         self.score = 0
         self.down_state = False
         self.can_hold = True
@@ -33,27 +33,40 @@ class GameState:
 
     #Still temporary
     #Given an action, attempts to perform the action
-    def keyAction(self, key,dt): 
-        if key == 'ArrowLeft':
+    def handle_action(self, key,dt=Constants.timestep):
+        print(key)
+        action = key['action']
+        print(action)
+        if action == 'left':
             self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]) )
-        elif key == 'ArrowRight':
+        elif action == 'right':
             self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"]))
-        elif key == 'ArrowUp' or key == "C":
+        elif action == 'ccw':
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
-        elif key == 'Z':
+        elif action == 'cw':
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
-        elif key == 'ArrowDownReleased':
-            self.down_state_held_time = 0
-            self.time_per_drop = Constants.max_time_per_drop
-        elif key == 'ArrowDown':
+        elif action == 'soft':
             self.down_state_held_time += dt
-            self.time_per_drop = Constants.max_time_per_drop/(Constants.drop_inertia*self.down_state_held_time + 1)
-        elif key == 'Shift':
+            self.speedUpDropRate(self.down_state_held_time)
+            print(self.time_per_drop)
+        elif action == 'hold':
             self.holdPiece()
-        elif key == 'Space':
+        elif action == 'hard':
             self.hardDrop()
         else:
             return
+
+    def handle_end_action(self,key,dt=Constants.timestep):
+        action = key['action']
+        if action == 'soft':
+            self.resetDropRate()
+
+    def speedUpDropRate(self,dropMetric):
+        self.time_per_drop = Constants.max_time_per_drop/(Constants.drop_inertia*dropMetric + 1)
+    def resetDropRate(self):
+        print("RESETING")
+        self.down_state_held_time = 0
+        self.time_per_drop = Constants.max_time_per_drop
 
     def attemptAction(self, action):
         test_piece = Piece.copy(self.current_piece)
@@ -68,6 +81,8 @@ class GameState:
     def collides(self, piece):    
         piece_coordinates = (piece.origin + piece.offsets).astype(int)
         #Check if out of board range
+
+        #Change to better max and min over rows and columns
         piece_row_max = np.amax(piece_coordinates[1])
         piece_row_min = np.amin(piece_coordinates[1])
         piece_col_max = np.amax(piece_coordinates[0])
@@ -79,7 +94,6 @@ class GameState:
                 transformed_coordinates = (np.array([[1,Constants.board_columns]]) @ piece_coordinates).squeeze()
                 #print(transformed_coordinates)
                 #Flatten Grid
-
                 flat_grid = self.grid.flatten()
                 grid_values = np.take(flat_grid,transformed_coordinates)
                 #print(grid_values)
@@ -92,11 +106,11 @@ class GameState:
     # Replace current piece with held piece
     def holdPiece(self):
         if self.can_hold:
-            old_piece_id = self.current_piece
+            old_piece_id = self.current_piece.id
             if self.held_piece == None:
                 self.current_piece=Piece.getNextPiece()
             else:
-                self.current_piece = Piece.generatePiece(self.held_piece)
+                self.current_piece = Piece(self.held_piece)
             self.can_hold = False
             self.held_piece = old_piece_id
 
@@ -106,26 +120,26 @@ class GameState:
     #Updates the location and updates to next piece
     def hardDrop(self):
         new_height = self.determineDropHeight()
+        print(new_height)
         distance = new_height-self.current_piece.origin[1]
         self.incrementScore(distance)
         self.current_piece.origin[1] = new_height
-        
         self.updateBoardWithPiece()
         self.clearFullRows()
+
         self.current_piece = Piece.getNextPiece()
 
     #Determine the drop height for the current piece by moving down
     def determineDropHeight(self):
         #print(self.current_piece.origin)
         test_piece = Piece.copy(self.current_piece)
-        maxHeight = self.current_piece.origin[1,0]
-        for i in range(1,Constants.board_rows+2-(int)(np.ceil(maxHeight))):
-            success = self.collides(test_piece)
-            currentRow = i + maxHeight
-            if not success:
-                return currentRow-1
+        origPieceHeight = self.current_piece.origin[1,0]
+        for i in range(1,Constants.board_rows+2-(int)(np.floor(origPieceHeight))):
             Piece.move(test_piece,DIRS["DOWN"])
-        return maxHeight
+            collision = self.collides(test_piece)
+            if collision:
+                return i + origPieceHeight-1
+        return i + origPieceHeight
 
     #Check if line needs to be cleared based on current piece
     def clearFullRows(self):
@@ -143,9 +157,11 @@ class GameState:
 
     #Increments the game score
     def incrementScore(self, score_diff):
-        self.score += score_diff
+        self.score += (int)(np.floor(score_diff))
 
     def updateBoardWithPiece(self):
+        self.resetDropRate()
+        self.can_hold = True
         self.down_state_held_time = 0
         for i in range(self.current_piece.offsets.shape[1]):
             piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
@@ -153,14 +169,17 @@ class GameState:
 
     def update(self,dt):
         self.time_since_drop += dt
+            
         if self.time_since_drop >= self.time_per_drop:
-            self.sendTelemetry()
+            print(self.time_per_drop)
             self.time_since_drop = 0
+            self.sendTelemetry()
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
             if not success:
                 self.updateBoardWithPiece()
                 self.clearFullRows()
                 self.current_piece = Piece.getNextPiece()
+
 
     def generateJSON(self):
         # TODO
@@ -187,7 +206,4 @@ np.array([[0,-1],[1,0]]),
 np.array([[0,1],[-1,0]]),
 "DOWN":
 np.array([[0],[1]]),
-
-
-
 }

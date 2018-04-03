@@ -8,8 +8,9 @@
 
 import time
 from GameState import GameState
+import Constants
 class Tetris:
-    TIMESTEP = 0.01
+    TIMESTEP = Constants.timestep
     input_value = ""
     key_logger = {}
 

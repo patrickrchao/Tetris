@@ -3,6 +3,7 @@ board_rows = 20
 board_columns = 10
 bag_size = 5 
 
+timestep = 0.01
 
 piece_offsets= {
 #I piece, light blue
@@ -77,4 +78,4 @@ np.array([[centerShifted],[1]])
 
 max_time_per_drop = 10/60
 #Higher values mean that holding down drops pieces faster
-drop_inertia = 0.5
+drop_inertia = 50
