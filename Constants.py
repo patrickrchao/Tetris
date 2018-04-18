@@ -52,7 +52,7 @@ np.array([
 
 centerShifted = (int) (np.floor(board_columns/2))-(1-board_columns%2)
 
-piece_origins={
+piece_origins={ #(x,y) and (col,row)
 #I piece, light blue
 1:
 np.array([[centerShifted+0.5],[1+0.5]]),
