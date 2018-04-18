@@ -10,12 +10,12 @@ class Input:
 
     def handle_action(self, data):
         self.input_state[data['action']] = True
-        for cb in self.action_callbacks:
+        for cb in self.action_cbs:
             cb(data)
 
     def handle_end_action(self, data):
         self.input_state[data['action']] = False
-        for cb in self.action_callbacks:
+        for cb in self.end_action_cbs:
             cb(data)
 
     def subscribe(self, event_type, cb):

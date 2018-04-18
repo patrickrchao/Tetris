@@ -79,3 +79,5 @@ np.array([[centerShifted],[1]])
 max_time_per_drop = 10/60
 #Higher values mean that holding down drops pieces faster
 drop_inertia = 50
+
+hold_rate = 6

@@ -31,12 +31,17 @@ class GameState:
         Input.init()
         Input.subscribe('action', self.handle_action)
         Input.subscribe('end_action', self.handle_end_action)
+        self.counter={'left' :0 ,'right':0}
 
     def handle_input(self):
         if Input.poll('left'):
-            self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
+            if self.counter['left'] % Constants.hold_rate == 0:
+                self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
+            self.counter['left'] +=1 
         if Input.poll('right'):
-            self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
+            if self.counter['right'] % Constants.hold_rate == 0:
+                self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
+            self.counter['right'] +=1 
         if Input.poll('cw'):
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
         if Input.poll('ccw'):
@@ -57,12 +62,18 @@ class GameState:
             self.hardDrop()
 
     def handle_end_action(self, key):
+
         action = key['action']
+        if action == 'left': 
+            self.counter['left'] = 0
+        if action == 'right': 
+            self.counter['right'] = 0  
         if action == 'soft':
             self.resetDropRate()
 
     def speedUpDropRate(self,dropMetric):
         self.time_per_drop = Constants.max_time_per_drop/(Constants.drop_inertia*dropMetric + 1)
+
     def resetDropRate(self):
         print("RESETING")
         self.down_state_held_time = 0
@@ -169,7 +180,6 @@ class GameState:
 
     def update(self,dt):
         self.time_since_drop += dt
-            
         if self.time_since_drop >= self.time_per_drop:
             print(self.time_per_drop)
             self.time_since_drop = 0
