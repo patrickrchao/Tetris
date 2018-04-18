@@ -1,26 +1,32 @@
+from telemetry import Telemetry
+
 class Input:
-    def init():
+    def init(self):
         Telemetry.subscribe('action', self.handle_action)
         Telemetry.subscribe('end_action', self.handle_end_action)
         self.input_state = {}
-        self.action_callbacks = []
+        self.action_cbs = []
+        self.end_action_cbs = []
 
     def handle_action(self, data):
-        if data in ACTION_MAP:
-            self.input_state[data] = True
-
+        self.input_state[data['action']] = True
         for cb in self.action_callbacks:
             cb(data)
 
     def handle_end_action(self, data):
-        if data == SOFT:
-            self.input_state[SOFT] = False
+        self.input_state[data['action']] = False
         for cb in self.action_callbacks:
             cb(data)
 
-    def subscribe(self, cb):
-        self.action_callbacks.append(cb)
+    def subscribe(self, event_type, cb):
+        if event_type == 'action':
+            self.action_cbs.append(cb)
+        elif event_type == 'end_action':
+            self.end_action_cbs.append(cb)
 
-    def poll(action):
-        return self.input_state[action]
+    def poll(self, action):
+        if action in self.input_state:
+            return self.input_state[action]
+        return False
     
+Input = Input()

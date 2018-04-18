@@ -9,10 +9,9 @@
 import time
 from GameState import GameState
 import Constants
+
 class Tetris:
     TIMESTEP = Constants.timestep
-    input_value = ""
-    key_logger = {}
 
     def __init__(self):
         self.game_state = GameState()
@@ -31,15 +30,7 @@ class Tetris:
                 accumulator -= self.TIMESTEP
 
     def handle_input(self):
-        input_value = "None"
-        self.key_logger[input_value] = True
+        self.game_state.handle_input()
 
     def update(self,dt):
         self.game_state.update(dt)
-
-        for key in self.key_logger.keys():
-            if key != "None":
-                if self.key_logger[key] == True:
-                    self.game_state.keyAction(key,dt)
-                    self.key_logger[key] = False
-

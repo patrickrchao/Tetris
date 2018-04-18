@@ -3,6 +3,27 @@ import Telemetry from './services/telemetry';
 import Input from './services/input';
 import './App.css';
 
+class Tetris extends Component {
+  componentDidMount() {
+    this.drawState.context = this.$.getContext('2d');
+    Telemetry.addListener('gameframe', data => {
+      this.onData(data);
+    })
+  }
+
+  render() {
+    return <canvas id='game' ref={$ => this.drawState = {$}} />
+  }
+
+  onData(data) {
+    
+  }
+
+  draw(grid) {
+
+  }
+}
+
 class Grid extends Component {
   constructor(props) {
     super(props);

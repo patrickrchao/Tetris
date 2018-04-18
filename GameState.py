@@ -28,35 +28,35 @@ class GameState:
         self.time_per_drop = Constants.max_time_per_drop
         self.down_state_held_time = 0
 
-        Telemetry.subscribe('action', self.handle_action)
-        Telemetry.subscribe('end_action', self.handle_end_action)
+        Input.init()
+        Input.subscribe('action', self.handle_action)
+        Input.subscribe('end_action', self.handle_end_action)
+
+    def handle_input(self):
+        if Input.poll('left'):
+            self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
+        if Input.poll('right'):
+            self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
+        if Input.poll('cw'):
+            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
+        if Input.poll('ccw'):
+            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
+        if Input.poll('soft'):
+            self.down_state_held_time += Constants.timestep
+            self.speedUpDropRate(self.down_state_held_time)
 
     #Still temporary
     #Given an action, attempts to perform the action
-    def handle_action(self, key,dt=Constants.timestep):
+    def handle_action(self, key):
         print(key)
         action = key['action']
-        print(action)
-        if action == 'left':
-            self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]) )
-        elif action == 'right':
-            self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"]))
-        elif action == 'ccw':
-            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
-        elif action == 'cw':
-            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
-        elif action == 'soft':
-            self.down_state_held_time += dt
-            self.speedUpDropRate(self.down_state_held_time)
-            print(self.time_per_drop)
-        elif action == 'hold':
+        print(action)                        
+        if action == 'hold':
             self.holdPiece()
         elif action == 'hard':
             self.hardDrop()
-        else:
-            return
 
-    def handle_end_action(self,key,dt=Constants.timestep):
+    def handle_end_action(self, key):
         action = key['action']
         if action == 'soft':
             self.resetDropRate()
