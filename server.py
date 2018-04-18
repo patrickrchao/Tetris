@@ -1,22 +1,28 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO
+from flask import Flask, render_template, request, session
+from flask_socketio import SocketIO, join_room, leave_room
 from Tetris import Tetris
-from telemetry import Telemetry
 import threading
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-@socketio.on('connected')
-def on_connect(json):
-    print('connected: ' + str(json))
-    Telemetry.bind_socket(socketio)
+games = { }
+
+@socketio.on('connect')
+def on_connect():
+    # print('connected: ' + str(json))
+    sid = request.sid
     def worker():
-        print('thread')
-        tetris = Tetris()
+        tetris = Tetris(socketio, sid)
+        games[sid] = tetris
         tetris.begin()
     t = threading.Thread(target=worker)
     t.start()
+
+@socketio.on('disconnect')
+def on_disconnect():
+    sid = request.sid
+    games[sid].end()
 
 @socketio.on('action')
 def on_action(json):

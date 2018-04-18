@@ -43,7 +43,6 @@ class Input {
 		const key = e.key.toLowerCase();
 		if (key in ACTION_MAP) {
 			this.input[key] = true;
-			console.log(`keydown ${key}`);
 			const action = ACTION_MAP[key];
 			Telemetry.emit('action', { action })
 		}
@@ -53,7 +52,6 @@ class Input {
 		const key = e.key.toLowerCase();
 		if (key in ACTION_MAP) {
 			this.input[key] = false;
-			console.log(`keyup ${key}`);
 			const action = ACTION_MAP[key];
 			Telemetry.emit('end_action', { action })
 		}

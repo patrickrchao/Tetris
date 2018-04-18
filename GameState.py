@@ -10,12 +10,9 @@ import numpy as np
 
 from Piece import Piece
 import Constants
-from telemetry import Telemetry
-from input_game import Input
-
 
 class GameState:
-    def __init__(self):
+    def __init__(self,services):
         self.board = np.zeros((Constants.board_rows+2,Constants.board_columns))
         #self.board[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
         Piece.fillBag()
@@ -27,26 +24,27 @@ class GameState:
         self.time_since_drop = 0
         self.time_per_drop = Constants.max_time_per_drop
         self.down_state_held_time = 0
+        self.services = services
 
-        Input.init()
-        Input.subscribe('action', self.handle_action)
-        Input.subscribe('end_action', self.handle_end_action)
+        self.services.input.subscribe('action', self.handle_action)
+        self.services.input.subscribe('end_action', self.handle_end_action)
         self.counter={'left' :0 ,'right':0}
 
     def handle_input(self):
-        if Input.poll('left'):
+        input = self.services.input
+        if input.poll('left'):
             if self.counter['left'] % Constants.hold_rate == 0:
                 self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
             self.counter['left'] +=1 
-        if Input.poll('right'):
+        if input.poll('right'):
             if self.counter['right'] % Constants.hold_rate == 0:
                 self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
             self.counter['right'] +=1 
-        if Input.poll('cw'):
+        if input.poll('cw'):
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
-        if Input.poll('ccw'):
+        if input.poll('ccw'):
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
-        if Input.poll('soft'):
+        if input.poll('soft'):
             self.down_state_held_time += Constants.timestep
             self.speedUpDropRate(self.down_state_held_time)
 
@@ -199,9 +197,9 @@ class GameState:
         temp_board = self.board.copy()
         piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
-            temp_board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
-        json = temp_board.tolist()
-        Telemetry.emit('gameframe', {'data': json})
+            temp_grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
+        json = temp_grid.tolist()
+        self.services.telemetry.emit('gameframe', {'data': json})
 
 
 DIRS = {

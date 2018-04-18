@@ -1,9 +1,9 @@
 from telemetry import Telemetry
 
 class Input:
-    def init(self):
-        Telemetry.subscribe('action', self.handle_action)
-        Telemetry.subscribe('end_action', self.handle_end_action)
+    def __init__(self, telemetry):
+        telemetry.subscribe('action', self.handle_action)
+        telemetry.subscribe('end_action', self.handle_end_action)
         self.input_state = {}
         self.action_cbs = []
         self.end_action_cbs = []
@@ -29,4 +29,3 @@ class Input:
             return self.input_state[action]
         return False
     
-Input = Input()
