@@ -8,7 +8,6 @@ class TelemetryService {
 
 	onConnect() {
 		console.log('socket connected');
-		this.socket.emit('connected', {data: 'connection established'});
 	}
 
 	emit(type, payload) {

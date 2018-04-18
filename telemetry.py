@@ -1,19 +1,13 @@
 class Telemetry:
-	def __init__(self):
-		self.name = 'hello'
-
-	def bind_socket(self, socket):
-		print('binding socekt')
-		self.socket = socket;
+	def __init__(self, socket, sid):
+		self.socket = socket
+		self.sid = sid
 
 	def emit(self, event, payload):
-		self.socket.emit(event, payload)
+		self.socket.emit(event, payload, room=self.sid)
 
 	def subscribe(self, event, cb):
 		self.socket.on_event(event, cb)
-
-Telemetry = Telemetry()
-
 
 LEFT= 'left',
 RIGHT= 'right',
