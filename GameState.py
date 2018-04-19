@@ -12,9 +12,9 @@ from Piece import Piece
 import Constants
 
 class GameState:
-    def __init__(self, services):
-        self.grid = np.zeros((Constants.board_rows+2,Constants.board_columns))
-        #self.grid[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
+    def __init__(self,services):
+        self.board = np.zeros((Constants.board_rows+2,Constants.board_columns))
+        #self.board[-1,:]=np.array([1,1,1,1,0,0,1,1,1,1])
         Piece.fillBag()
         self.current_piece = Piece.getNextPiece()
         self.held_piece = None
@@ -102,11 +102,11 @@ class GameState:
                 #Check if piece is valid in location
                 transformed_coordinates = (np.array([[1,Constants.board_columns]]) @ piece_coordinates).squeeze()
                 #print(transformed_coordinates)
-                #Flatten Grid
-                flat_grid = self.grid.flatten()
-                grid_values = np.take(flat_grid,transformed_coordinates)
-                #print(grid_values)
-                if np.sum(grid_values)==0:
+                #Flatten board
+                flat_board = self.board.flatten()
+                board_values = np.take(flat_board,transformed_coordinates)
+                #print(board_values)
+                if np.sum(board_values)==0:
                     return False
         return True
 
@@ -142,7 +142,7 @@ class GameState:
     def determineDropHeight(self):
         #print(self.current_piece.origin)
         test_piece = Piece.copy(self.current_piece)
-        origPieceHeight = self.current_piece.origin[1,0]
+        origPieceHeight = self.current_piece.origin[1]
         for i in range(1,Constants.board_rows+2-(int)(np.floor(origPieceHeight))):
             Piece.move(test_piece,DIRS["DOWN"])
             collision = self.collides(test_piece)
@@ -157,12 +157,12 @@ class GameState:
 
         cleared = [self.checkRow(row) for row in piece_rows] 
         rows_to_clear = piece_rows[cleared]
-        self.grid = np.delete(self.grid,np.array([rows_to_clear]),axis=0)
-        self.grid = np.vstack((np.zeros((len(rows_to_clear),Constants.board_columns)),self.grid))
+        self.board = np.delete(self.board,np.array([rows_to_clear]),axis=0)
+        self.board = np.vstack((np.zeros((len(rows_to_clear),Constants.board_columns)),self.board))
 
     #Checks for if a given row is full
     def checkRow(self, row):
-        return np.prod(self.grid[row])!= 0
+        return np.prod(self.board[row])!= 0
 
     #Increments the game score
     def incrementScore(self, score_diff):
@@ -174,7 +174,7 @@ class GameState:
         self.down_state_held_time = 0
         for i in range(self.current_piece.offsets.shape[1]):
             piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
-            self.grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
+            self.board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
 
     def update(self,dt):
         self.time_since_drop += dt
@@ -194,7 +194,7 @@ class GameState:
         return 
 
     def sendTelemetry(self):
-        temp_grid = self.grid.copy()
+        temp_board = self.board.copy()
         piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
             temp_grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
