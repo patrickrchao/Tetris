@@ -28,7 +28,7 @@ class GameState:
 
         self.services.input.subscribe('action', self.handle_action)
         self.services.input.subscribe('end_action', self.handle_end_action)
-        self.counter={'left' :0 ,'right':0}
+        self.counter={'left' :0 ,'right':0,'cw':0,'ccw':0,'soft':0}
 
     def handle_input(self):
         input = self.services.input
@@ -39,34 +39,33 @@ class GameState:
         if input.poll('right'):
             if self.counter['right'] % Constants.hold_rate == 0:
                 self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
-            self.counter['right'] +=1 
-        if input.poll('cw'):
-            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
-        if input.poll('ccw'):
-            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
+            self.counter['right'] +=1   
         if input.poll('soft'):
+            #if self.counter['soft'] % Constants.hold_rate == 0:
             self.down_state_held_time += Constants.timestep
             self.speedUpDropRate(self.down_state_held_time)
+            #self.counter['soft'] +=1    
 
     #Still temporary
     #Given an action, attempts to perform the action
     def handle_action(self, key):
         print(key)
-        action = key['action']
-        print(action)                        
+        action = key['action']             
         if action == 'hold':
             self.holdPiece()
         elif action == 'hard':
             self.hardDrop()
-
+        elif action == 'cw':
+            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
+        elif action == 'ccw':
+            self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
     def handle_end_action(self, key):
-
         action = key['action']
         if action == 'left': 
             self.counter['left'] = 0
-        if action == 'right': 
+        elif action == 'right': 
             self.counter['right'] = 0  
-        if action == 'soft':
+        elif action == 'soft':
             self.resetDropRate()
 
     def speedUpDropRate(self,dropMetric):
@@ -97,6 +96,7 @@ class GameState:
         piece_col_max = np.amax(piece_coordinates[0])
         piece_col_min = np.amin(piece_coordinates[0])
 
+        print(piece_coordinates)
         if piece_row_max < Constants.board_rows+2 and piece_row_min >= 0:
             if piece_col_max < Constants.board_columns and piece_col_min >= 0:
                 #Check if piece is valid in location
@@ -111,7 +111,7 @@ class GameState:
         return True
 
 
-    # Hold the currently held piece
+    # Hold the currently held pieces
     # Replace current piece with held piece
     def holdPiece(self):
         if self.can_hold:
@@ -133,6 +133,7 @@ class GameState:
         distance = new_height-self.current_piece.origin[1]
         self.incrementScore(distance)
         self.current_piece.origin[1] = new_height
+        print("drop",(self.current_piece.origin + self.current_piece.offsets).astype(int))
         self.updateBoardWithPiece()
         self.clearFullRows()
 
@@ -140,15 +141,16 @@ class GameState:
 
     #Determine the drop height for the current piece by moving down
     def determineDropHeight(self):
-        #print(self.current_piece.origin)
         test_piece = Piece.copy(self.current_piece)
         origPieceHeight = self.current_piece.origin[1]
-        for i in range(1,Constants.board_rows+2-(int)(np.floor(origPieceHeight))):
+        i = 1
+        for i in range(1,Constants.board_rows+3-(int)(np.floor(origPieceHeight))):
             Piece.move(test_piece,DIRS["DOWN"])
             collision = self.collides(test_piece)
             if collision:
-                return i + origPieceHeight-1
-        return i + origPieceHeight
+                print("collided",(test_piece.origin + test_piece.offsets).astype(int))
+                return test_piece.origin[1] - 1
+        return test_piece.origin[1]
 
     #Check if line needs to be cleared based on current piece
     def clearFullRows(self):
@@ -172,8 +174,8 @@ class GameState:
         self.resetDropRate()
         self.can_hold = True
         self.down_state_held_time = 0
+        piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
-            piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
             self.board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
 
     def update(self,dt):
@@ -181,6 +183,7 @@ class GameState:
         if self.time_since_drop >= self.time_per_drop:
             print(self.time_per_drop)
             self.time_since_drop = 0
+            print("telem",(self.current_piece.origin + self.current_piece.offsets).astype(int))
             self.sendTelemetry()
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
             if not success:
@@ -197,8 +200,8 @@ class GameState:
         temp_board = self.board.copy()
         piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
-            temp_grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
-        json = temp_grid.tolist()
+            temp_board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
+        json = temp_board.tolist()
         self.services.telemetry.emit('gameframe', {'data': json})
 
 

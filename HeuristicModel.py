@@ -136,14 +136,14 @@ class HeuristicModel(Model):
         num_cleared = sum(cleared)
         return num_cleared
 
-    def bumpiness(self, board):
-        boardRow = get_top_row(board)
+    def bumpiness(board):
+        board_row = get_top_row(board)
         total_sum=0
         for i in range(board.shape[1]-1):
-            total_sum += abs(boardRow[i]-boardRow[i+1])
-        return totalSum
+            total_sum += abs(board_row[i]-board_row[i+1])
+        return total_sum
 
-    def generateMoveQueue(self, bestCol,maxRot,pieceLeftCol):
+    def generateMoveQueue(bestCol,maxRot,pieceLeftCol):
         if maxRot==3:
             moveQueue.enqueue(4) #z
         else:
