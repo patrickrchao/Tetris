@@ -197,8 +197,8 @@ class GameState:
         temp_board = self.board.copy()
         piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
-            temp_grid[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
-        json = temp_grid.tolist()
+            temp_board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
+        json = temp_board.tolist()
         self.services.telemetry.emit('gameframe', {'data': json})
 
 
