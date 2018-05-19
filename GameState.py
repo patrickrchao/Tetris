@@ -6,6 +6,7 @@
 #Contains the game state variables
 #Tetris Game Logic
 
+
 import numpy as np
 
 from Piece import Piece
@@ -72,14 +73,16 @@ class GameState:
         self.time_per_drop = Constants.max_time_per_drop/(Constants.drop_inertia*dropMetric + 1)
 
     def resetDropRate(self):
-        print("RESETING")
+        #print("RESETING")
         self.down_state_held_time = 0
         self.time_per_drop = Constants.max_time_per_drop
 
     def attemptAction(self, action):
         test_piece = Piece.copy(self.current_piece)
         action(test_piece)
+        #print("attempting",action)
         success = not self.collides(test_piece)
+        #print(success,(self.current_piece.origin + self.current_piece.offsets).astype(int))
         if success:
             action(self.current_piece)
         return success
@@ -96,7 +99,7 @@ class GameState:
         piece_col_max = np.amax(piece_coordinates[0])
         piece_col_min = np.amin(piece_coordinates[0])
 
-        print(piece_coordinates)
+        #print("in checking collision",piece_coordinates)
         if piece_row_max < Constants.board_rows+2 and piece_row_min >= 0:
             if piece_col_max < Constants.board_columns and piece_col_min >= 0:
                 #Check if piece is valid in location
@@ -129,12 +132,12 @@ class GameState:
     #Updates the location and updates to next piece
     def hardDrop(self):
         new_height = self.determineDropHeight()
-        print(new_height)
+        #print(new_height)
         distance = new_height-self.current_piece.origin[1]
         self.incrementScore(distance)
         self.current_piece.origin[1] = new_height
-        print("drop",(self.current_piece.origin + self.current_piece.offsets).astype(int))
-        self.updateBoardWithPiece()
+        #print("drop",(self.current_piece.origin + self.current_piece.offsets).astype(int))
+        self.updateBoardWithPiece(new_height)
         self.clearFullRows()
 
         self.current_piece = Piece.getNextPiece()
@@ -148,7 +151,7 @@ class GameState:
             Piece.move(test_piece,DIRS["DOWN"])
             collision = self.collides(test_piece)
             if collision:
-                print("collided",(test_piece.origin + test_piece.offsets).astype(int))
+                #print("collided",(test_piece.origin + test_piece.offsets).astype(int))
                 return test_piece.origin[1] - 1
         return test_piece.origin[1]
 
@@ -170,20 +173,24 @@ class GameState:
     def incrementScore(self, score_diff):
         self.score += (int)(np.floor(score_diff))
 
-    def updateBoardWithPiece(self):
+    def updateBoardWithPiece(self,piece_height=None):
+        if piece_height == None:
+            piece_height = self.current_piece.origin[1]
         self.resetDropRate()
         self.can_hold = True
         self.down_state_held_time = 0
-        piece_coordinates = (self.current_piece.origin + self.current_piece.offsets).astype(int)
+        current_piece_origin = self.current_piece.origin.copy()
+        current_piece_origin[1] = piece_height
+        piece_coordinates = (current_piece_origin + self.current_piece.offsets).astype(int)
         for i in range(self.current_piece.offsets.shape[1]):
             self.board[piece_coordinates[1,i],piece_coordinates[0,i]] = self.current_piece.id
 
     def update(self,dt):
         self.time_since_drop += dt
         if self.time_since_drop >= self.time_per_drop:
-            print(self.time_per_drop)
+            #print(self.time_per_drop)
             self.time_since_drop = 0
-            print("telem",(self.current_piece.origin + self.current_piece.offsets).astype(int))
+            #print("telem",(self.current_piece.origin + self.current_piece.offsets).astype(int))
             self.sendTelemetry()
             success = self.attemptAction(lambda piece: Piece.move(piece, DIRS["DOWN"]))
             if not success:
