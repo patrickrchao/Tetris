@@ -12,6 +12,11 @@ from telemetry import Telemetry
 from input_game import Input
 import Constants
 
+from ModelInput import ModelInput
+from HeuristicModel import HeuristicModel
+
+
+
 class Services:
     def __init__(self, input, telemetry):
         self.input = input
@@ -19,10 +24,14 @@ class Services:
 
 class Tetris:
     TIMESTEP = Constants.timestep
-
+    if Constants.use_model:
+        TIMESTEP = Constants.model_timestep
     def __init__(self, socket, sid):
         telemetry = Telemetry(socket, sid)
-        input = Input(telemetry)
+        if Constants.use_model:
+            input = ModelInput(HeuristicModel())
+        else:
+            input = Input(telemetry)
         self.game_state = GameState(Services(input, telemetry))
         self.terminate = False
 

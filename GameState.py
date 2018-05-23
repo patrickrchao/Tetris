@@ -33,18 +33,22 @@ class GameState:
 
     def handle_input(self):
         input = self.services.input
-        if input.poll('left'):
-            if self.counter['left'] % Constants.hold_rate == 0:
-                self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
-            self.counter['left'] +=1 
-        if input.poll('right'):
-            if self.counter['right'] % Constants.hold_rate == 0:
-                self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
-            self.counter['right'] +=1   
-        if input.poll('soft'):
-            #if self.counter['soft'] % Constants.hold_rate == 0:
-            self.down_state_held_time += Constants.timestep
-            self.speedUpDropRate(self.down_state_held_time)
+        if Constants.use_model:
+            self.handle_action(input.get_next_input(self.board,self.current_piece.id,self.current_piece.origin))
+        else:
+        #if not Constants.use_model:
+            if input.poll('left'):
+                if self.counter['left'] % Constants.hold_rate == 0:
+                    self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
+                self.counter['left'] +=1 
+            if input.poll('right'):
+                if self.counter['right'] % Constants.hold_rate == 0:
+                    self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"])) 
+                self.counter['right'] +=1   
+            if input.poll('soft'):
+                #if self.counter['soft'] % Constants.hold_rate == 0:
+                self.down_state_held_time += Constants.timestep
+                self.speedUpDropRate(self.down_state_held_time)
             #self.counter['soft'] +=1    
 
     #Still temporary
@@ -60,6 +64,15 @@ class GameState:
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["CLOCKWISE"]))
         elif action == 'ccw':
             self.attemptAction(lambda piece: Piece.rotate(piece, DIRS["COUNTERCLOCKWISE"]))
+        if Constants.use_model:
+            if action == 'left':
+                self.attemptAction(lambda piece: Piece.move(piece, DIRS["LEFT"]))
+            elif action == 'right':
+                self.attemptAction(lambda piece: Piece.move(piece, DIRS["RIGHT"]))
+            elif action == 'soft':
+                self.down_state_held_time += Constants.timestep
+                self.speedUpDropRate(self.down_state_held_time)
+
     def handle_end_action(self, key):
         action = key['action']
         if action == 'left': 
@@ -146,7 +159,6 @@ class GameState:
     def determineDropHeight(self):
         test_piece = Piece.copy(self.current_piece)
         origPieceHeight = self.current_piece.origin[1]
-        i = 1
         for i in range(1,Constants.board_rows+3-(int)(np.floor(origPieceHeight))):
             Piece.move(test_piece,DIRS["DOWN"])
             collision = self.collides(test_piece)
@@ -197,11 +209,6 @@ class GameState:
                 self.updateBoardWithPiece()
                 self.clearFullRows()
                 self.current_piece = Piece.getNextPiece()
-
-
-    def generateJSON(self):
-        # TODO
-        return 
 
     def sendTelemetry(self):
         temp_board = self.board.copy()

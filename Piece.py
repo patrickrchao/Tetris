@@ -14,8 +14,8 @@ import numpy as np
 import random
 import Constants
 from collections import deque
-np.random.seed(5)
-random.seed(5)
+#np.random.seed(2)
+#random.seed(2)
 class Piece:
     bag = deque()
     
@@ -51,7 +51,7 @@ class Piece:
 
      #Initializes the bag of pieces given a bag size
     def fillBag():
-        nextPieces = np.arange(1,8).tolist() #np.full((8,),2).tolist()
+        nextPieces = np.arange(1,8).tolist() #
         random.shuffle(nextPieces)
         Piece.bag.extend(nextPieces)
 

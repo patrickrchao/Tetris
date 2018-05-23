@@ -1,10 +1,13 @@
 import numpy as np
-from ItemQueue import Queue
-import Piece
-from GameState import 
+from collections import deque
+from Piece import Piece
+import Constants
+from Model import Model
+import math
+# From https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/
 
-lines_constant = -0.510066
-aggregate_height_constant = 0.760666
+lines_constant = 0.760666
+aggregate_height_constant = -0.510066
 num_holes_constant = -0.35663 #4
 bumpiness_constant = -0.184483 
 
@@ -17,7 +20,7 @@ np.array([[1],[0]]),
 "rot0":
 np.array([[1,0],[0,1]]),
 "rot1":
-np.array([[0,-1],[1,0]]),
+np.array([[0,-1],[1,0]]), #ccw
 "rot2":
 np.array([[-1,0],[0,-1]]),
 "rot3":
@@ -27,52 +30,79 @@ np.array([[0],[1]]),
 }
 
 class HeuristicModel(Model):
-    piece_queue = Queue()
-    def get_move(board,piece_id,piece_origin):
-        scores = np.zeros(4,2)
+    
+    def get_move_queue(self,board,piece_id,piece_origin):
+        scores = np.zeros((4,2))
 
         left_piece_origin = np.array([[0],piece_origin[1]])
         curr_offsets = Constants.piece_offsets[piece_id]
 
         piece = Piece(piece_id,offsets = curr_offsets,origin=left_piece_origin)
         for rotation in range(4):
-            scores_per_col = scores_per_col_given_rot(board,piece)
+            scores_per_col = HeuristicModel.scores_per_col_given_rot(board,piece)
+            #print(scores_per_col)
             column_score= np.array([np.argmax(scores_per_col),max(scores_per_col)]) #column, score
             scores[rotation] = column_score.reshape(1,2)
-            Piece.rotate(piece, DIRS["rot"+str(rotation)])
+            Piece.rotate(piece, DIRS["rot"+str(3)])#+str(rotation)])
+        #print(scores)
         max_score = np.max(scores[:,1])
         max_score_rotate = np.argmax(scores[:,1])
         max_score_column = scores[max_score_rotate,0]
+        #print(max_score,max_score_rotate,max_score_column)
+        if max_score_rotate == 3:
+            Model.move_queue.appendleft("ccw") #z
+        else:
+            for _ in range(max_score_rotate):
+                Model.move_queue.appendleft("cw") #up
+
+        for _ in range((int)(piece_origin[0]-max_score_column)):
+            Model.move_queue.appendleft("left")
+
+        for _ in range((int)(math.ceil(max_score_column-piece_origin[0]))):
+            Model.move_queue.appendleft("right")
+        Model.move_queue.appendleft("hard")
+        #return Model.move_queue
 
 
-    def board_score(board,piece):
-        temp_board = create_temp_board(board,piece)
-        lines = lines_cleared(temp_board)
-        height = aggrgate_height(temp_board)
-        holes = num_holes(temp_board)
-        bump = bumpiness(temp_board)
-        score = height*lines_constant+lines*aggregate_height_constant+holes*num_holes_constant+bump*bumpiness_constant
+    def board_score(board,piece_origin,piece_offsets):
+        temp_board = HeuristicModel.create_temp_board(board,piece_origin,piece_offsets)
+        lines = HeuristicModel.clear_full_rows(temp_board)
+        height = HeuristicModel.aggregate_height(temp_board)
+        holes = HeuristicModel.num_holes(temp_board)
+        bump = HeuristicModel.bumpiness(temp_board)
+        score = lines*lines_constant+height*aggregate_height_constant+holes*num_holes_constant+bump*bumpiness_constant
+        #print(lines,height,holes,bump)
         return score
 
     def scores_per_col_given_rot(board,curr_piece):
+        #print(board)
+        #print("orig_x",curr_piece.origin)
         piece = curr_piece.copy()
-        scores = np.full((3,), -999999)
-        for col in range(board.shape[1]):
-            new_height = determineDropHeight(board,piece)
-            piece.origin[1] = new_height
-            if not collides(board,piece):
-                scores[col] = board_score(board,piece.id,piece.offsets,piece.origin)
-            Piece.move(piece, DIRS["RIGHT"])
+        piece.origin[0] = piece.origin[0]-4
 
-    def determineDropHeight(board,piece):
+        #print("curr_x",piece.origin[0])
+        scores = np.full((board.shape[1],), -999.0)
+        orig_height = piece.origin.copy()[1]
+        for col in range(board.shape[1]):
+            new_height = HeuristicModel.determine_drop_height(board,piece)
+            piece.origin[1] = new_height
+            if not HeuristicModel.collides(board,piece):
+                scores[col] = HeuristicModel.board_score(board,piece.origin,piece.offsets)
+            piece.origin[1] = orig_height
+            Piece.move(piece, DIRS["RIGHT"])
+            #print(piece.origin)
+        return scores
+
+    def determine_drop_height(board,piece):
+
         test_piece = Piece.copy(piece)
         orig_piece_height = piece.origin[1]
         for i in range(1,Constants.board_rows+2-(int)(np.floor(orig_piece_height))):
             Piece.move(test_piece,DIRS["DOWN"])
-            collision = collides(board,test_piece)
+            collision = HeuristicModel.collides(board,test_piece)
             if collision:
-                return i + orig_piece_height-1
-        return i + origPieceHeight
+                return test_piece.origin[1] - 1
+        return test_piece.origin[1] 
 
     #Check if a piece collides or is out of bounds
     #Returns true if they collide false otherwise
@@ -96,15 +126,15 @@ class HeuristicModel(Model):
                     return False
         return True
 
-    def create_temp_board(board,piece):
+    def create_temp_board(board,piece_origin,piece_offsets):
         temp_board = board.copy()
-        for i in range(piece.offsets.shape[1]):
-            piece_coordinates = (piece.origin + piece.offsets).astype(int)
-            temp_board[piece_coordinates[1,i],piece_coordinates[0,i]] = piece.id
+        for i in range(piece_offsets.shape[1]):
+            piece_coordinates = (piece_origin + piece_offsets).astype(int)
+            temp_board[piece_coordinates[1,i],piece_coordinates[0,i]] = 1
         return temp_board
 
     def aggregate_height(board):
-        top_row = get_top_row(board)
+        top_row = HeuristicModel.get_top_row(board)
         total_height = 0
         for i in range(board.shape[1]):
             total_height += top_row[i]
@@ -113,11 +143,11 @@ class HeuristicModel(Model):
     def get_top_row(board):
         top_row = np.zeros(board.shape[1])
         for col in range(board.shape[1]):
-            row_for:
+            #row_for:
             for row in range(2,board.shape[0]):
                 if board[row,col] != 0:
                     top_row[col] = board.shape[0]-row
-                    break row_for
+                    break #row_for
         return top_row
 
     def num_holes(board):
@@ -125,19 +155,23 @@ class HeuristicModel(Model):
         for col in range(board.shape[1]):
             block_above = False
             for row in range(board.shape[0]):
-                if board[row,col]==1:
+                if board[row,col]!=0:
                     block_above = True
                 elif block_above:
                     count +=1
         return count
 
-    def clearFullRows(board):
-        cleared = [np.prod(board[row])!= 0 for row in board.shape[0]] 
+    #Checks for if a given row is full
+    def checkRow(self, row):
+        return np.prod(self.board[row])!= 0
+
+    def clear_full_rows(board):
+        cleared = [np.prod(board[row])!= 0 for row in range(board.shape[0])] 
         num_cleared = sum(cleared)
         return num_cleared
 
     def bumpiness(board):
-        board_row = get_top_row(board)
+        board_row = HeuristicModel.get_top_row(board)
         total_sum=0
         for i in range(board.shape[1]-1):
             total_sum += abs(board_row[i]-board_row[i+1])
